@@ -1,0 +1,87 @@
+@import url(https://db.onlinewebfonts.com/c/398f17c0b9bdd82bf82b1ef6e74d3678?family=bauserif);
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #050505;
+  --foreground: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #050505; /* Enforce dark mode dominant */
+    --foreground: #ffffff;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: "bauserif", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: #64d437;
+  color: #000;
+}
+
+/* Hide scrollbar for a cleaner look */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+/* Base text styling for editorials */
+p {
+  color: #b3b3b3;
+  line-height: normal;
+  letter-spacing: -0.01em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #ffffff;
+  font-family: "bauserif", sans-serif;
+}
+
+/* Custom Scrollbar for Luxury Dark Theme */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(100, 212, 55, 0.2);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 212, 55, 0.5);
+}
+
+/* Firefox support */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 212, 55, 0.2) rgba(255, 255, 255, 0.02);
+}
+
+/* Skeleton shimmer sweep */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}

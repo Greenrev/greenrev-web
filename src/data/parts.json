@@ -1,0 +1,62 @@
+[
+  {
+    "id": "p1",
+    "name": "Aureum Carbon Aero Wing",
+    "category": "Aerodynamics",
+    "price": 4500,
+    "description": "High-downforce dry carbon fiber wing, wind-tunnel tested for stability at 300km/h+.",
+    "image": "/images/parts/wing.png",
+    "brand": "Aureum Performance",
+    "specs": ["Dry Carbon Fiber", "Adjustable Angle", "Titanium Mounts"]
+  },
+  {
+    "id": "p2",
+    "name": "Titanium valvetronic Exhaust",
+    "category": "Exhaust",
+    "price": 8200,
+    "description": "Full titanium construction with wireless valve control for adjustable acoustic profile.",
+    "image": "/images/home/parts.png",
+    "brand": "Akrapovič x GreenRev",
+    "specs": ["Grade 5 Titanium", "-12kg weight reduction", "Blue Heat Finish"]
+  },
+  {
+    "id": "p3",
+    "name": "21\" Forged Mono-Block Wheels",
+    "category": "Wheels",
+    "price": 12000,
+    "description": "Ultra-lightweight aerospace grade forged aluminum. Set of 4.",
+    "image": "/images/home/parts.png",
+    "brand": "HRE Performance",
+    "specs": ["Forged 6061-T6", "Satin Black Finish", "Center-lock compatible"]
+  },
+  {
+    "id": "p4",
+    "name": "Carbon Ceramic Brake Kit",
+    "category": "Braking",
+    "price": 15500,
+    "description": "Unmatched thermal resistance and stopping power for track dominance.",
+    "image": "/images/home/parts.png",
+    "brand": "Brembo Racing",
+    "specs": ["400mm Discs", "6-Piston Calipers", "Zero Fade Technology"]
+  },
+  {
+    "id": "p5",
+    "name": "Custom Alcantara Wheel",
+    "category": "Interior",
+    "price": 2800,
+    "description": "Hand-stitched Italian Alcantara with carbon fiber inserts and LED shift lights.",
+    "image": "/images/home/parts.png",
+    "brand": "Aureum Interiors",
+    "specs": ["Integrated Shift LEDs", "Carbon Fiber Trim", "Custom Stitching"]
+  },
+  {
+    "id": "p6",
+    "name": "Stage 3 Turbo Upgrade",
+    "category": "Engine",
+    "price": 9500,
+    "description": "Twin-scroll ball bearing turbochargers for instant spool and massive top-end power.",
+    "image": "/images/home/parts.png",
+    "brand": "Garrett Performance",
+    "specs": ["Twin-Scroll", "Billet Compressor Wheel", "Up to 900hp support"]
+  }
+]
