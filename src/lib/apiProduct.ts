@@ -9,9 +9,9 @@ export async function uploadProductImage(
   file: File,
 ): Promise<string> {
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("files", file);
 
-  const response = await apiRequest<{ url: string }>("/api/v1/upload", {
+  const response = await apiRequest<{ urls: string[] }>("/api/v1/upload", {
     method: "POST",
     body: formData,
   });
@@ -20,7 +20,25 @@ export async function uploadProductImage(
     throw new Error(response.error.message);
   }
 
-  return response.data.url;
+  return response.data.urls[0];
+}
+
+export async function uploadProductImages(
+  files: File[],
+): Promise<string[]> {
+  const formData = new FormData();
+  files.forEach(file => formData.append("files", file));
+
+  const response = await apiRequest<{ urls: string[] }>("/api/v1/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.success) {
+    throw new Error(response.error.message);
+  }
+
+  return response.data.urls;
 }
 
 export async function createProduct(

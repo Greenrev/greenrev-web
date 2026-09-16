@@ -23,6 +23,7 @@ export type CarEntry = {
     hex: string;
   };
   image: string;
+  images?: string[];
   specs: {
     "0_100": number;
     horsepower: number;

@@ -44,6 +44,7 @@ function CarDetailsContent() {
   const [car, setCar] = useState<CarEntry | null>(null);
   const [suggestions, setSuggestions] = useState<CarEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
 
   // Acquisition request modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -68,6 +69,7 @@ function CarDetailsContent() {
           if (dynamicProduct.category === "vehicle") {
             const carEntry = transformProductToCarEntry(dynamicProduct);
             setCar(carEntry);
+            setActiveImage(carEntry.image);
 
             // Fetch suggestions
             const allVehicles = await getAllProducts("vehicle");
@@ -212,15 +214,22 @@ function CarDetailsContent() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] as const }}
-            className="relative"
+            className="flex flex-col gap-4"
           >
             <div className="relative aspect-[4/5] overflow-hidden rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent z-10" />
-              <img
-                src={car.image}
-                alt={car.name}
-                className="w-full h-full object-cover"
-              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent z-10 pointer-events-none" />
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={activeImage || car.image}
+                  src={activeImage || car.image}
+                  alt={car.name}
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.4 }}
+                  className="w-full h-full object-cover"
+                />
+              </AnimatePresence>
 
               {/* Color Badge Overlay */}
               <div className="absolute bottom-8 left-8 z-20 flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl">
@@ -233,6 +242,24 @@ function CarDetailsContent() {
                 </span>
               </div>
             </div>
+
+            {/* Thumbnails */}
+            {car.images && car.images.length > 0 && (
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x">
+                {[car.image, ...car.images.filter(img => img !== car.image)].map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImage(img)}
+                    className={cn(
+                      "relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0 rounded-2xl overflow-hidden border-2 transition-all snap-start",
+                      activeImage === img ? "border-accent" : "border-white/10 hover:border-white/30"
+                    )}
+                  >
+                    <img src={img} alt={`${car.name} view ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* Right: Info Section */}

@@ -3,12 +3,21 @@ type ApiFailure = { success: false; error: { code: string; message: string; deta
 export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "http://localhost:5050";
+  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "http://localhost:4000";
 
 let storedCsrfToken: string | undefined;
+let storedAccessToken: string | undefined;
 
 export function setCsrfToken(token: string) {
   storedCsrfToken = token;
+}
+
+export function setAccessToken(token: string | undefined) {
+  storedAccessToken = token;
+  if (typeof window !== "undefined") {
+    if (token) localStorage.setItem("greenrev_access_token", token);
+    else localStorage.removeItem("greenrev_access_token");
+  }
 }
 
 function getCookie(name: string): string | undefined {
@@ -28,6 +37,13 @@ async function doFetch<T>(input: RequestInfo, init?: RequestInit): Promise<ApiRe
   }
   if (csrf) {
     headers.set("X-CSRF-Token", csrf);
+  }
+
+  if (typeof window !== "undefined" && !storedAccessToken) {
+    storedAccessToken = localStorage.getItem("greenrev_access_token") || undefined;
+  }
+  if (storedAccessToken) {
+    headers.set("Authorization", `Bearer ${storedAccessToken}`);
   }
 
   const res = await fetch(input, {
@@ -54,12 +70,14 @@ export async function apiRequest<T>(
   if (!response || (response as ApiFailure).success === false) {
     const err = response as ApiFailure;
     if (err?.error?.code === "UNAUTHENTICATED") {
-      const refreshed = await doFetch<{ user: unknown; csrfToken: string }>(`${API_BASE}/api/v1/auth/refresh`, {
+      const refreshed = await doFetch<{ user: unknown; csrfToken: string; accessToken: string }>(`${API_BASE}/api/v1/auth/refresh`, {
         method: "POST",
       });
       if (refreshed && (refreshed as any).success === true) {
         const token = (refreshed as any).data?.csrfToken;
+        const accToken = (refreshed as any).data?.accessToken;
         if (token) setCsrfToken(token);
+        if (accToken) setAccessToken(accToken);
         return doFetch<T>(url, init);
       }
     }

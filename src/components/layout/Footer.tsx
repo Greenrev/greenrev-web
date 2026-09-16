@@ -16,15 +16,16 @@ const NAV_LINKS = [
 ];
 
 const SOCIAL_LINKS = [
-  { name: "Instagram", href: "https://instagram.com" },
-  { name: "X (Twitter)", href: "https://x.com" },
-  { name: "LinkedIn", href: "https://linkedin.com" },
+  { name: "Facebook", href: "https://www.facebook.com/share/1D3SEVRcA5/?mibextid=wwXIfr" },
+  { name: "X (Twitter)", href: "https://x.com/greenrevng?s=11" },
+  { name: "TikTok", href: "https://www.tiktok.com/@greenrev.ng?_r=1&_t=ZS-99bzeeNrQMH" },
+  { name: "Instagram", href: "https://www.instagram.com/greenrev.ng?stkn=MW41YmhyZm0wbHRpMQ%3D%3D&utm_source=qr" },
 ];
 
 const LEGAL_LINKS = [
-  { name: "Privacy Policy", href: "/about" },
-  { name: "Terms of Service", href: "/about" },
-  { name: "Cookie Policy", href: "/about" },
+  { name: "Privacy Policy", href: "/privacy" },
+  { name: "Terms of Service", href: "/terms" },
+  { name: "Cookie Policy", href: "/privacy#cookies" },
 ];
 
 // Magnetic Link Component for Awwwards-style hover effects
@@ -150,13 +151,9 @@ export default function Footer() {
             </span>
             <div className="flex flex-col space-y-3">
               {LEGAL_LINKS.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className="text-subtle hover:text-white transition-colors text-sm py-1"
-                >
+                <MagneticLink key={link.name} href={link.href}>
                   {link.name}
-                </Link>
+                </MagneticLink>
               ))}
             </div>
           </div>

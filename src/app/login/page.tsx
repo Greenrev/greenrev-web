@@ -80,6 +80,7 @@ export default function LoginPage() {
             src="/images/home/relinquish.jpeg"
             alt="Cinematic automotive detail"
             fill
+            sizes="50vw"
             className="object-cover grayscale"
             priority
           />

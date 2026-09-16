@@ -26,6 +26,7 @@ import { getProduct, getAllProducts } from "@/lib/apiProduct";
 import { transformProductToPartEntry, PartEntry } from "@/lib/transformProduct";
 import { createAcquisitionRequest } from "@/lib/apiAcquisition";
 import { apiRequest } from "@/lib/apiClient";
+import { cn } from "@/lib/utils";
 
 function PartDetailsContent() {
   const router = useRouter();
@@ -37,6 +38,7 @@ function PartDetailsContent() {
   const [part, setPart] = useState<PartEntry | null>(null);
   const [relatedParts, setRelatedParts] = useState<PartEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
   const [isAdded, setIsAdded] = useState(false);
 
   // Acquisition modal state
@@ -62,6 +64,7 @@ function PartDetailsContent() {
           if (dynamicProduct.category === "part") {
             const partEntry = transformProductToPartEntry(dynamicProduct);
             setPart(partEntry);
+            setActiveImage(partEntry.image);
 
             // Fetch related parts
             const allParts = await getAllProducts("part");
@@ -212,23 +215,47 @@ function PartDetailsContent() {
 
         <div className="flex flex-col lg:flex-row gap-16 lg:gap-24">
           {/* Left Column: Media */}
-          <div className="lg:w-1/2">
+          <div className="lg:w-1/2 flex flex-col gap-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="relative aspect-square w-full rounded-3xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center p-8 group"
             >
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
-              <Image
-                src={part.image}
-                alt={part.name}
-                fill
-                className="object-contain p-12 transition-transform duration-700 group-hover:scale-110 z-0"
-              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 pointer-events-none" />
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={activeImage || part.image}
+                  src={activeImage || part.image}
+                  alt={part.name}
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.4 }}
+                  className="w-full h-full object-contain p-12 transition-transform duration-700 group-hover:scale-110 z-0"
+                />
+              </AnimatePresence>
               <div className="absolute top-6 left-6 z-20 px-3 py-1 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-[8px] uppercase tracking-widest text-white/60">
                 {part.category}
               </div>
             </motion.div>
+
+            {/* Thumbnails */}
+            {part.images && part.images.length > 0 && (
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x">
+                {[part.image, ...part.images.filter(img => img !== part.image)].map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImage(img)}
+                    className={cn(
+                      "relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0 rounded-2xl overflow-hidden border-2 transition-all snap-start bg-white/5",
+                      activeImage === img ? "border-accent" : "border-white/10 hover:border-white/30"
+                    )}
+                  >
+                    <img src={img} alt={`${part.name} view ${idx + 1}`} className="w-full h-full object-contain p-2" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right Column: Details */}

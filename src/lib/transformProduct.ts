@@ -18,6 +18,7 @@ export function transformProductToCarEntry(product: Product): CarEntry {
     priceValue,
     color: product.color || { name: "Default", hex: "#000000" },
     image: product.image,
+    images: product.images || [],
     specs: {
       "0_100": product.specs?.acceleration ?? 0,
       horsepower: product.specs?.horsepower ?? 0,
@@ -38,6 +39,7 @@ export type PartEntry = {
   price: number;
   description: string;
   image: string;
+  images?: string[];
   brand: string;
   specs: string[];
   vendorId?: string;
@@ -61,6 +63,7 @@ export function transformProductToPartEntry(product: Product): PartEntry {
     price: priceNum,
     description: product.description || "",
     image: product.image,
+    images: product.images || [],
     brand: product.vendorName || product.make,
     specs: specs.length > 0 ? specs : ["Premium Quality"],
     vendorId: product.vendorId || "",

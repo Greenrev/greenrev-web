@@ -12,6 +12,7 @@ export default function VendorSignupPage() {
   const { register, googleAuthUrl } = useAuth();
   const [formData, setFormData] = useState({ name: "", company: "", email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -115,8 +116,29 @@ export default function VendorSignupPage() {
               </div>
             </div>
 
+            <div className="flex items-start gap-3 mt-4">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-white/20 bg-transparent text-accent focus:ring-accent focus:ring-offset-background"
+              />
+              <label htmlFor="terms" className="text-sm text-subtle leading-relaxed">
+                I agree to the{" "}
+                <Link href="/terms" className="text-white hover:text-accent underline underline-offset-2 transition-colors">
+                  Terms of Use
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="text-white hover:text-accent underline underline-offset-2 transition-colors">
+                  Privacy Policy
+                </Link>
+                .
+              </label>
+            </div>
+
             <button
-              disabled={isSubmitting}
+              disabled={isSubmitting || !agreedToTerms}
               className="w-full py-4 bg-white text-black rounded-full font-bold uppercase tracking-widest text-xs hover:bg-accent transition-all disabled:opacity-50 disabled:bg-white"
             >
               {isSubmitting ? "Submitting Application..." : "Submit Application"}

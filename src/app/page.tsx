@@ -18,7 +18,7 @@ export default function Home() {
 
       <CarMorph />
       <MobileAppCTA />
-      <Testimonials />
+      {/* <Testimonials /> */}
       <GlobalPresence />
       <Footer />
     </main>

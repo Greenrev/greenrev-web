@@ -38,3 +38,13 @@ export async function updateProfile(data: Partial<UserProfile> & { profileImageB
 
   return response.data.user;
 }
+
+export async function deleteAccount(): Promise<void> {
+  const response = await apiRequest<{ message: string }>("/api/v1/profile", {
+    method: "DELETE",
+  });
+
+  if (!response.success) {
+    throw new Error(response.error.message);
+  }
+}

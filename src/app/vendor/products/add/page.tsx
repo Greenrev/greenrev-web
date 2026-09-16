@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { createProduct, getProduct, updateProduct, uploadProductImage } from "@/lib/apiProduct";
+import { createProduct, getProduct, updateProduct, uploadProductImage, uploadProductImages } from "@/lib/apiProduct";
 import type {
   ProductCategory,
   ProductColor,
@@ -45,6 +45,7 @@ export default function VendorAddProductPage() {
     year: "",
     mileage: "",
     image: "",
+    images: [] as string[],
     description: "",
     inStock: true,
     stockQuantity: "1",
@@ -56,8 +57,8 @@ export default function VendorAddProductPage() {
     colorName: "",
     colorHex: "#000000",
   });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProduct, setIsLoadingProduct] = useState(false);
@@ -86,6 +87,7 @@ export default function VendorAddProductPage() {
           year: product.year ? String(product.year) : "",
           mileage: product.mileage || "",
           image: product.image || "",
+          images: product.images || [],
           description: product.description || "",
           inStock: product.inStock !== false,
           stockQuantity: String(product.stockQuantity ?? 1),
@@ -119,11 +121,14 @@ export default function VendorAddProductPage() {
 
     try {
       let finalImageUrl = formData.image;
+      let finalImageUrls = formData.images;
 
-      if (selectedFile) {
+      if (selectedFiles.length > 0) {
         setIsUploadingImage(true);
         try {
-          finalImageUrl = await uploadProductImage(selectedFile);
+          const uploadedUrls = await uploadProductImages(selectedFiles);
+          finalImageUrl = uploadedUrls[0];
+          finalImageUrls = uploadedUrls;
         } catch (uploadErr) {
           setError("Image upload failed. Please try again.");
           setIsSubmitting(false);
@@ -157,6 +162,7 @@ export default function VendorAddProductPage() {
         year: formData.year ? Number(formData.year) : undefined,
         mileage: formData.mileage || undefined,
         image: finalImageUrl,
+        images: finalImageUrls.length > 0 ? finalImageUrls : undefined,
         specs: Object.keys(specs).length > 0 ? specs : undefined,
         color,
         description: formData.description || undefined,
@@ -181,6 +187,7 @@ export default function VendorAddProductPage() {
         year: "",
         mileage: "",
         image: "",
+        images: [],
         description: "",
         inStock: true,
         stockQuantity: "1",
@@ -192,8 +199,8 @@ export default function VendorAddProductPage() {
         colorName: "",
         colorHex: "#000000",
       });
-      setSelectedFile(null);
-      setImagePreview("");
+      setSelectedFiles([]);
+      setImagePreviews([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create product");
     } finally {
@@ -206,24 +213,27 @@ export default function VendorAddProductPage() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
     const validExtensions = ["jpg", "jpeg", "png", "avif", "webp", "glb", "gltf"];
-    const extension = file.name.split(".").pop()?.toLowerCase();
-
-    if (!extension || !validExtensions.includes(extension)) {
-      setError("Unsupported file extension. Please use jpg, png, avif, webp, glb, or gltf.");
-      return;
+    const validFiles: File[] = [];
+    
+    for (const file of files) {
+      const extension = file.name.split(".").pop()?.toLowerCase();
+      if (!extension || !validExtensions.includes(extension)) {
+        setError(`Unsupported file extension for ${file.name}. Please use jpg, png, avif, webp, glb, or gltf.`);
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setError(`File size exceeds 10MB limit for ${file.name}.`);
+        return;
+      }
+      validFiles.push(file);
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setError("File size exceeds 10MB limit.");
-      return;
-    }
-
-    setSelectedFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    setSelectedFiles(validFiles);
+    setImagePreviews(validFiles.map(file => URL.createObjectURL(file)));
     setError(null);
   };
 
@@ -441,6 +451,7 @@ export default function VendorAddProductPage() {
                     <div className="relative group">
                       <input
                         type="file"
+                        multiple
                         accept=".jpg,.jpeg,.png,.avif,.webp,.glb,.gltf"
                         onChange={handleFileChange}
                         className="hidden"
@@ -448,29 +459,42 @@ export default function VendorAddProductPage() {
                       />
                       <label
                         htmlFor="product-image-upload"
-                        className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
-                          imagePreview
+                        className={`flex flex-col items-center justify-center w-full min-h-[8rem] p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                          imagePreviews.length > 0 || formData.image
                             ? "border-accent bg-accent/5"
                             : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
                         }`}
                       >
-                        {imagePreview ? (
-                          <div className="relative w-full h-full">
-                            <img
-                              src={imagePreview}
-                              alt="Preview"
-                              className="w-full h-full object-cover rounded-xl"
-                            />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
-                              <p className="text-white text-sm md:text-base font-medium">Change Image</p>
-                            </div>
+                        {imagePreviews.length > 0 ? (
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+                            {imagePreviews.map((preview, idx) => (
+                              <div key={idx} className="relative aspect-square w-full rounded-lg overflow-hidden border border-white/10">
+                                <img
+                                  src={preview}
+                                  alt={`Preview ${idx + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : formData.image || (formData.images && formData.images.length > 0) ? (
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+                            {(formData.images?.length ? formData.images : [formData.image]).map((img, idx) => (
+                              <div key={idx} className="relative aspect-square w-full rounded-lg overflow-hidden border border-white/10 opacity-70">
+                                <img
+                                  src={img}
+                                  alt={`Current Image ${idx + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ))}
                           </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center pt-5 pb-6">
                             <PlusCircle className="w-8 h-8 text-white/40 mb-2" />
-                            <p className="text-white/60 text-base md:text-lg">Click to upload</p>
-                            <p className="text-subtle text-sm md:text-base mt-1">
-                              JPG, PNG, AVIF, WEBP, GLB, GLTF (Max 10MB)
+                            <p className="text-white/60 text-base md:text-lg">Click to upload multiple</p>
+                            <p className="text-subtle text-sm md:text-base mt-1 text-center">
+                              Select multiple files (Max 10MB each)
                             </p>
                           </div>
                         )}
@@ -676,6 +700,7 @@ export default function VendorAddProductPage() {
                       year: "",
                       mileage: "",
                       image: "",
+                      images: [],
                       description: "",
                       inStock: true,
                       stockQuantity: "1",

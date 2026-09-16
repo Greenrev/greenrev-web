@@ -7,7 +7,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { apiBaseUrl, apiRequest, setCsrfToken } from "@/lib/apiClient";
+import { apiBaseUrl, apiRequest, setCsrfToken, setAccessToken } from "@/lib/apiClient";
 export type UserRole = "customer" | "vendor" | "mechanic" | "admin" | null;
 
 export class AuthError extends Error {
@@ -66,14 +66,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const res = await apiRequest<{ user: User; csrfToken?: string }>("/api/v1/auth/me", {
+      const res = await apiRequest<{ user: User; csrfToken?: string; accessToken?: string }>("/api/v1/auth/me", {
         method: "GET",
       });
       if (cancelled) return;
       if (res.success) {
         if (res.data.csrfToken) setCsrfToken(res.data.csrfToken);
+        if (res.data.accessToken) setAccessToken(res.data.accessToken);
         setUser(res.data.user);
       } else {
+        setAccessToken(undefined);
         setUser(null);
       }
       setIsLoading(false);
@@ -84,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await apiRequest<{ user: User; csrfToken: string }>(
+    const res = await apiRequest<{ user: User; csrfToken: string; accessToken: string }>(
       "/api/v1/auth/login",
       { method: "POST", body: JSON.stringify({ email, password }) },
       { retryOn401: false },
@@ -93,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new AuthError(res.error.code, res.error.message);
     }
     if (res.data.csrfToken) setCsrfToken(res.data.csrfToken);
+    if (res.data.accessToken) setAccessToken(res.data.accessToken);
     setUser(res.data.user);
     return res.data.user;
   };
@@ -133,6 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await apiRequest<{ ok: boolean }>("/api/v1/auth/logout", {
       method: "POST",
     });
+    setAccessToken(undefined);
     setUser(null);
   };
 
