@@ -73,12 +73,12 @@ export default function Navbar() {
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }} // smooth awwwards-style ease
         className="fixed top-0 inset-x-0 z-[100] pointer-events-none"
       >
-        <div className="w-full p-4 md:p-8 flex justify-between items-center pointer-events-auto">
+        <div className="w-full p-4 md:p-8 flex justify-between items-center pointer-events-none">
           {/* Left side: Brand / Logo */}
           <div className="flex flex-1 justify-start">
             <Link
               href="/"
-              className="flex items-center justify-center hover:opacity-80 transition-opacity"
+              className="flex items-center justify-center hover:opacity-80 transition-opacity pointer-events-auto"
             >
               <Image
                 src="/logo.png"
@@ -92,7 +92,7 @@ export default function Navbar() {
           </div>
 
           {/* Middle side: Desktop Navigation Tabs */}
-          <div className="hidden md:flex justify-center flex-shrink-0">
+          <div className="hidden md:flex justify-center flex-shrink-0 pointer-events-auto">
             <div className="flex items-center gap-2 p-1.5 bg-black/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
               {tabs.map((tab) => {
                 const isActive =
@@ -104,8 +104,8 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Right side: Shopping Cart & Auth & Mobile Menu Toggle */}
-          <div className="flex flex-1 justify-end items-center gap-3">
+          {/* Right side: Actions */}
+          <div className="flex flex-1 justify-end items-center gap-4 pointer-events-auto">
             {!isLoading && user ? (
               <UserDropdown user={user} logout={logout} />
             ) : (
