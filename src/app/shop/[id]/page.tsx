@@ -334,7 +334,7 @@ function CarDetailsContent() {
                 <div className="flex items-center gap-4 text-sm">
                   <ShieldCheck className="w-5 h-5 text-accent" />
                   <span className="text-white">
-                    Certified Mechanical Inspection
+                    Mechanical Inspection
                   </span>
                 </div>
                 <div className="flex items-center gap-4 text-sm">

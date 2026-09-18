@@ -128,6 +128,14 @@ function OrderContent() {
     ? activeCar.price 
     : cartTotal;
 
+  const handleBack = () => {
+    if (window.history.length > 2 || (document.referrer && document.referrer.includes(window.location.host))) {
+      router.back();
+    } else {
+      router.push("/shop");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-white flex flex-col lg:flex-row">
       {/* Left Side: Visual Preview */}
@@ -163,7 +171,7 @@ function OrderContent() {
 
         {/* HUD Elements */}
         <div className="absolute top-12 left-12 z-20">
-          <button onClick={() => router.back()} className="flex items-center gap-4 group">
+          <button onClick={handleBack} className="flex items-center gap-4 group relative z-50">
             <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-white/5 transition-colors">
               <ArrowLeft className="w-4 h-4" />
             </div>
