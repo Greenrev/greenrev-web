@@ -6,6 +6,7 @@ import { ArrowUpRight, ShoppingCart, Scale } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { useCompare } from "@/context/CompareContext";
+import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
@@ -39,6 +40,7 @@ export type CarEntry = {
 export default function InventoryCard({ car }: { car: CarEntry }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { user } = useAuth();
   const { addToCart } = useCart();
   const { addToCompare, removeFromCompare, compareItems } = useCompare();
   
@@ -114,10 +116,20 @@ export default function InventoryCard({ car }: { car: CarEntry }) {
             
             <div className="flex justify-between items-end mb-4">
               <div className="flex flex-col gap-1">
-                {car.vendorName && (
-                  <span className="text-[10px] text-accent tracking-widest uppercase font-bold">
-                    By {car.vendorName}
-                  </span>
+                {user ? (
+                  car.vendorName && (
+                    <span className="text-[10px] text-accent tracking-widest uppercase font-bold">
+                      By {car.vendorName}
+                    </span>
+                  )
+                ) : (
+                  <Link 
+                    href="/login" 
+                    className="text-[10px] text-accent/70 hover:text-accent tracking-widest uppercase font-bold underline decoration-accent/30 underline-offset-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Sign in to view owner
+                  </Link>
                 )}
                 <h4 className="text-3xl text-white font-display tracking-wide max-w-3xl pr-4">{car.name}</h4>
               </div>

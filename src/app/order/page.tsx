@@ -163,12 +163,12 @@ function OrderContent() {
 
         {/* HUD Elements */}
         <div className="absolute top-12 left-12 z-20">
-          <Link href="/shop" className="flex items-center gap-4 group">
+          <button onClick={() => router.back()} className="flex items-center gap-4 group">
             <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-white/5 transition-colors">
               <ArrowLeft className="w-4 h-4" />
             </div>
-            <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-subtle group-hover:text-white transition-colors">Back to Showroom</span>
-          </Link>
+            <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-subtle group-hover:text-white transition-colors">Back</span>
+          </button>
         </div>
       </div>
 

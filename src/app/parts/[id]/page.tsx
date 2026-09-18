@@ -205,13 +205,13 @@ function PartDetailsContent() {
   return (
     <main className="min-h-screen bg-background pt-48 pb-20">
       <div className="max-w-[1400px] mx-auto px-6 md:px-12">
-        <Link
-          href="/parts"
+        <button
+          onClick={() => router.back()}
           className="inline-flex items-center gap-2 text-subtle hover:text-white transition-colors mb-12 text-[10px] font-bold tracking-[0.2em] uppercase"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Boutique
-        </Link>
+          Back
+        </button>
 
         <div className="flex flex-col lg:flex-row gap-16 lg:gap-24">
           {/* Left Column: Media */}

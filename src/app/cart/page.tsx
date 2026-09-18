@@ -73,13 +73,13 @@ export default function CartPage() {
   return (
     <main className="min-h-screen bg-background pt-48 pb-20 px-6 md:px-12">
       <div className="max-w-[1200px] mx-auto">
-        <Link
-          href="/shop"
+        <button
+          onClick={() => router.back()}
           className="inline-flex items-center gap-2 text-subtle hover:text-white transition-colors mb-8 text-xs font-bold tracking-[0.2em] uppercase"
         >
           <ArrowLeft className="w-4 h-4" />
           Continue Browsing
-        </Link>
+        </button>
 
         <div className="flex flex-col md:flex-row items-baseline justify-between mb-12 border-b border-white/10 pb-6 gap-6">
           <motion.h1

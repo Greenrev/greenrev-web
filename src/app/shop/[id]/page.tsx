@@ -199,7 +199,7 @@ function CarDetailsContent() {
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          onClick={() => router.push("/shop")}
+          onClick={() => router.back()}
           className="flex items-center gap-2 text-subtle hover:text-white transition-colors mb-12 group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
@@ -368,20 +368,31 @@ function CarDetailsContent() {
 
                 {/* Vendor Contact Row */}
                 <div className="flex gap-3 pt-2 border-t border-white/5">
-                  {car.vendorPhone && (
-                    <a
-                      href={`tel:${car.vendorPhone}`}
-                      className="flex-1 flex items-center justify-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white py-3 rounded-2xl transition-all text-xs font-bold uppercase tracking-widest"
+                  {user ? (
+                    <>
+                      {car.vendorPhone && (
+                        <a
+                          href={`tel:${car.vendorPhone}`}
+                          className="flex-1 flex items-center justify-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white py-3 rounded-2xl transition-all text-xs font-bold uppercase tracking-widest"
+                        >
+                          <Phone className="w-3.5 h-3.5" /> Call Vendor
+                        </a>
+                      )}
+                      <button
+                        onClick={handleMsgVendorClick}
+                        className="flex-1 flex items-center justify-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white py-3 rounded-2xl transition-all text-xs font-bold uppercase tracking-widest"
+                      >
+                        <Mail className="w-3.5 h-3.5" /> Message Vendor
+                      </button>
+                    </>
+                  ) : (
+                    <Link
+                      href="/login"
+                      className="w-full flex items-center justify-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white py-3 rounded-2xl transition-all text-xs font-bold uppercase tracking-widest"
                     >
-                      <Phone className="w-3.5 h-3.5" /> Call Vendor
-                    </a>
+                      Sign in to view owner details
+                    </Link>
                   )}
-                  <button
-                    onClick={handleMsgVendorClick}
-                    className="flex-1 flex items-center justify-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white py-3 rounded-2xl transition-all text-xs font-bold uppercase tracking-widest"
-                  >
-                    <Mail className="w-3.5 h-3.5" /> Message Vendor
-                  </button>
                 </div>
               </div>
             </motion.div>
