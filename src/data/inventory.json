@@ -16,7 +16,9 @@
       "horsepower": 577,
       "torque": "850 Nm",
       "transmission": "9-Speed Automatic",
-      "topSpeed": "220 km/h"
+      "topSpeed": "220 km/h",
+      "origin": "Germany",
+      "vin": "WBA00000000000G63"
     }
   },
   {
@@ -34,9 +36,10 @@
     "specs": {
       "0_100": 7.7,
       "horsepower": 250,
-      "torque": "380 Nm",
       "transmission": "8-Speed Automatic",
-      "topSpeed": "200 km/h"
+      "topSpeed": "200 km/h",
+      "origin": "USA",
+      "vin": "1FMCU00000000ESC"
     }
   },
   {
@@ -56,7 +59,9 @@
       "horsepower": 201,
       "torque": "500 Nm",
       "transmission": "6-Speed Automatic",
-      "topSpeed": "175 km/h"
+      "topSpeed": "175 km/h",
+      "origin": "Japan",
+      "vin": "JT10000000000PRADO"
     }
   },
   {
@@ -76,7 +81,9 @@
       "horsepower": 409,
       "torque": "650 Nm",
       "transmission": "10-Speed Automatic",
-      "topSpeed": "210 km/h"
+      "topSpeed": "210 km/h",
+      "origin": "Japan",
+      "vin": "JT20000000000LC300"
     }
   },
   {
@@ -96,7 +103,9 @@
       "horsepower": 362,
       "torque": "500 Nm",
       "transmission": "9-Speed Automatic",
-      "topSpeed": "250 km/h"
+      "topSpeed": "250 km/h",
+      "origin": "Germany",
+      "vin": "WDC0000000000GLE45"
     }
   },
   {
@@ -116,7 +125,9 @@
       "horsepower": 523,
       "torque": "750 Nm",
       "transmission": "8-Speed Automatic",
-      "topSpeed": "250 km/h"
+      "topSpeed": "250 km/h",
+      "origin": "UK",
+      "vin": "SAL0000000000RRANG"
     }
   },
   {
@@ -134,9 +145,10 @@
     "specs": {
       "0_100": 6.6,
       "horsepower": 204,
-      "torque": "335 Nm",
-      "transmission": "E-CVT",
-      "topSpeed": "185 km/h"
+      "transmission": "CVT",
+      "topSpeed": "190 km/h",
+      "origin": "Japan",
+      "vin": "JHL00000000000CRV"
     }
   },
   {
@@ -156,7 +168,9 @@
       "horsepower": 206,
       "torque": "250 Nm",
       "transmission": "8-Speed Automatic",
-      "topSpeed": "217 km/h"
+      "topSpeed": "217 km/h",
+      "origin": "Japan",
+      "vin": "4T1000000000CAMRY"
     }
   },
   {
@@ -176,7 +190,9 @@
       "horsepower": 673,
       "torque": "838 Nm",
       "transmission": "Single-Speed Direct Drive",
-      "topSpeed": "265 km/h"
+      "topSpeed": "265 km/h",
+      "origin": "China",
+      "vin": "LVS00000000000SU7X"
     }
   },
   {
@@ -196,7 +212,9 @@
       "horsepower": 1020,
       "torque": "1100 Nm",
       "transmission": "Single-Speed Direct Drive",
-      "topSpeed": "262 km/h"
+      "topSpeed": "262 km/h",
+      "origin": "USA",
+      "vin": "5YJ0000000000MODX"
     }
   },
   {
@@ -214,9 +232,10 @@
     "specs": {
       "0_100": 3.9,
       "horsepower": 578,
-      "torque": "650 Nm",
-      "transmission": "Single-Speed Direct Drive",
-      "topSpeed": "220 km/h"
+      "transmission": "1-Speed Direct Drive",
+      "topSpeed": "200 km/h",
+      "origin": "UK",
+      "vin": "SAD00000000000IPACE"
     }
   },
   {

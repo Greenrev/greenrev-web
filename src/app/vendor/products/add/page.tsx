@@ -53,6 +53,8 @@ export default function VendorAddProductPage() {
     torque: "",
     transmission: "",
     topSpeed: "",
+    origin: "",
+    vin: "",
     acceleration: "",
     colorName: "",
     colorHex: "#000000",
@@ -64,6 +66,8 @@ export default function VendorAddProductPage() {
   const [isLoadingProduct, setIsLoadingProduct] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [customSpecs, setCustomSpecs] = useState<{key: string, value: string}[]>([]);
+  const SUGGESTED_SPECS = ["Fuel Type", "Drivetrain", "Body Style", "Engine Size", "Trim Level", "Number of Doors"];
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -97,12 +101,25 @@ export default function VendorAddProductPage() {
           torque: product.specs?.torque || "",
           transmission: product.specs?.transmission || "",
           topSpeed: product.specs?.topSpeed || "",
+          origin: product.specs?.origin || "",
+          vin: product.specs?.vin || "",
           acceleration: product.specs?.acceleration
             ? String(product.specs.acceleration)
             : "",
           colorName: product.color?.name || "",
           colorHex: product.color?.hex || "#000000",
         });
+
+        const knownSpecKeys = ["horsepower", "torque", "transmission", "topSpeed", "origin", "vin", "acceleration", "range", "battery", "charging", "compatibility", "warranty"];
+        const loadedCustomSpecs: {key: string, value: string}[] = [];
+        if (product.specs) {
+          for (const [key, value] of Object.entries(product.specs)) {
+            if (!knownSpecKeys.includes(key) && value !== undefined && value !== null) {
+              loadedCustomSpecs.push({ key, value: String(value) });
+            }
+          }
+        }
+        setCustomSpecs(loadedCustomSpecs);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load product");
       } finally {
@@ -115,6 +132,12 @@ export default function VendorAddProductPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (category === "vehicle" && (!formData.vin || !formData.origin || !formData.transmission)) {
+      setError("VIN, Condition (Local/Foreign), and Transmission are compulsory fields for vehicles.");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     setSuccess(false);
@@ -144,8 +167,16 @@ export default function VendorAddProductPage() {
       if (formData.torque) specs.torque = formData.torque;
       if (formData.transmission) specs.transmission = formData.transmission;
       if (formData.topSpeed) specs.topSpeed = formData.topSpeed;
+      if (formData.origin) specs.origin = formData.origin;
+      if (formData.vin) specs.vin = formData.vin;
       if (formData.acceleration)
         specs.acceleration = Number(formData.acceleration);
+
+      for (const spec of customSpecs) {
+        if (spec.key.trim() && spec.value.trim()) {
+          specs[spec.key.trim()] = spec.value.trim();
+        }
+      }
 
       const color: ProductColor | undefined = formData.colorName
         ? { name: formData.colorName, hex: formData.colorHex }
@@ -195,6 +226,8 @@ export default function VendorAddProductPage() {
         torque: "",
         transmission: "",
         topSpeed: "",
+        origin: "",
+        vin: "",
         acceleration: "",
         colorName: "",
         colorHex: "#000000",
@@ -590,6 +623,35 @@ export default function VendorAddProductPage() {
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-accent transition-colors"
                       />
                     </div>
+                    <div>
+                      <label className="block text-subtle text-sm md:text-base font-bold uppercase tracking-widest mb-2">
+                        Origin
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Germany"
+                        value={formData.origin}
+                        onChange={(e) =>
+                          handleInputChange("origin", e.target.value)
+                        }
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-accent transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-subtle text-sm md:text-base font-bold uppercase tracking-widest mb-2">
+                        VIN
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="17-character VIN"
+                        value={formData.vin}
+                        onChange={(e) =>
+                          handleInputChange("vin", e.target.value)
+                        }
+                        maxLength={17}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-accent transition-colors uppercase"
+                      />
+                    </div>
 
                     <div>
                       <label className="block text-subtle text-sm md:text-base font-bold uppercase tracking-widest mb-2">
@@ -605,6 +667,86 @@ export default function VendorAddProductPage() {
                         }
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-accent transition-colors"
                       />
+                    </div>
+                  </div>
+
+                  {/* Custom Specifications UI */}
+                  <div className="mt-8 pt-8 border-t border-white/5">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base font-medium text-white">Additional Details</h3>
+                      <button
+                        type="button"
+                        onClick={() => setCustomSpecs([...customSpecs, { key: "", value: "" }])}
+                        className="text-xs text-accent font-bold uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1"
+                      >
+                        <PlusCircle className="w-3.5 h-3.5" /> Add Detail
+                      </button>
+                    </div>
+                    
+                    {customSpecs.length > 0 && (
+                      <div className="space-y-4 mb-6">
+                        {customSpecs.map((spec, index) => (
+                          <div key={index} className="flex gap-3 md:gap-4 items-start">
+                            <div className="flex-1">
+                              <input
+                                type="text"
+                                placeholder="Name (e.g. Fuel Type)"
+                                value={spec.key}
+                                onChange={(e) => {
+                                  const newSpecs = [...customSpecs];
+                                  newSpecs[index].key = e.target.value;
+                                  setCustomSpecs(newSpecs);
+                                }}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 md:px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-accent transition-colors text-xs md:text-sm"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <input
+                                type="text"
+                                placeholder="Value (e.g. Petrol)"
+                                value={spec.value}
+                                onChange={(e) => {
+                                  const newSpecs = [...customSpecs];
+                                  newSpecs[index].value = e.target.value;
+                                  setCustomSpecs(newSpecs);
+                                }}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 md:px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-accent transition-colors text-xs md:text-sm"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newSpecs = [...customSpecs];
+                                newSpecs.splice(index, 1);
+                                setCustomSpecs(newSpecs);
+                              }}
+                              className="mt-3 p-1 text-white/40 hover:text-red-400 transition-colors"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div>
+                      <p className="text-[10px] text-white/40 mb-3 uppercase tracking-widest font-bold">Suggestions:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {SUGGESTED_SPECS.map(suggestion => (
+                          <button
+                            key={suggestion}
+                            type="button"
+                            onClick={() => {
+                              if (!customSpecs.some(s => s.key.toLowerCase() === suggestion.toLowerCase())) {
+                                setCustomSpecs([...customSpecs, { key: suggestion, value: "" }]);
+                              }
+                            }}
+                            className="px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] md:text-xs text-white/70 transition-colors uppercase tracking-wider"
+                          >
+                            + {suggestion}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -708,6 +850,8 @@ export default function VendorAddProductPage() {
                       torque: "",
                       transmission: "",
                       topSpeed: "",
+                      origin: "",
+                      vin: "",
                       acceleration: "",
                       colorName: "",
                       colorHex: "#000000",

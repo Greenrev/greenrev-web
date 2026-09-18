@@ -11,6 +11,9 @@ export interface ProductSpecs {
   charging?: string;
   compatibility?: string;
   warranty?: string;
+  origin?: string;
+  vin?: string;
+  [key: string]: string | number | undefined;
 }
 
 export interface ProductColor {
