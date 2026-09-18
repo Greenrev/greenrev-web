@@ -94,6 +94,14 @@ function PartDetailsContent() {
     }
   }, [id, router]);
 
+  const handleBack = () => {
+    if (window.history.length > 2 || (document.referrer && document.referrer.includes(window.location.host))) {
+      router.back();
+    } else {
+      router.push("/parts");
+    }
+  };
+
   const handleAddToCart = () => {
     if (!part) return;
     addToCart({
@@ -206,8 +214,8 @@ function PartDetailsContent() {
     <main className="min-h-screen bg-background pt-48 pb-20">
       <div className="max-w-[1400px] mx-auto px-6 md:px-12">
         <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-subtle hover:text-white transition-colors mb-12 text-[10px] font-bold tracking-[0.2em] uppercase"
+          onClick={handleBack}
+          className="inline-flex items-center gap-2 text-subtle hover:text-white transition-colors mb-12 text-[10px] font-bold tracking-[0.2em] uppercase relative z-50"
         >
           <ArrowLeft className="w-4 h-4" />
           Back

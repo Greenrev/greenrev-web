@@ -70,12 +70,20 @@ export default function CartPage() {
     }
   };
 
+  const handleBack = () => {
+    if (window.history.length > 2 || (document.referrer && document.referrer.includes(window.location.host))) {
+      router.back();
+    } else {
+      router.push("/shop");
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background pt-48 pb-20 px-6 md:px-12">
       <div className="max-w-[1200px] mx-auto">
         <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-subtle hover:text-white transition-colors mb-8 text-xs font-bold tracking-[0.2em] uppercase"
+          onClick={handleBack}
+          className="inline-flex items-center gap-2 text-subtle hover:text-white transition-colors mb-8 text-xs font-bold tracking-[0.2em] uppercase relative z-50"
         >
           <ArrowLeft className="w-4 h-4" />
           Continue Browsing
