@@ -19,7 +19,8 @@ import Link from "next/link";
 export default function VerificationPage() {
   const { user } = useAuth();
   const [level, setLevel] = useState<"individual" | "business">("individual");
-  const [nin, setNin] = useState("");
+  const [documentType, setDocumentType] = useState<"NIN" | "PASSPORT" | "DRIVERS_LICENSE">("NIN");
+  const [documentNumber, setDocumentNumber] = useState("");
   const [cacNumber, setCacNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -46,7 +47,7 @@ export default function VerificationPage() {
     try {
       const endpoint = level === "individual" ? "/api/v1/verification/individual" : "/api/v1/verification/business";
       const body = level === "individual"
-        ? { nin, selfieUrl: "pending-smile-sdk-capture" }
+        ? { documentType, documentNumber, selfieUrl: "pending-smile-sdk-capture" }
         : { cacNumber, cacDocumentUrl: "url", directorIdUrl: "url", businessAddress: "addr", bankAccountNumber: "123", bankCode: "001" };
 
       const res = await apiRequest<{ success: boolean; data?: any; error?: any }>(endpoint, {
@@ -235,21 +236,42 @@ export default function VerificationPage() {
                           >
                             <div className="group">
                               <label className="block mb-2 text-[10px] font-bold uppercase tracking-widest text-white/40 group-focus-within:text-accent transition-colors">
-                                National Identification Number (NIN)
+                                Identity Document Type
+                              </label>
+                              <select
+                                value={documentType}
+                                onChange={(e) => {
+                                  setDocumentType(e.target.value as any);
+                                  setDocumentNumber(""); // Reset number when type changes
+                                }}
+                                className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-white outline-none focus:border-accent transition-all appearance-none cursor-pointer"
+                              >
+                                <option value="NIN" className="bg-obsidian">National Identification Number (NIN)</option>
+                                <option value="PASSPORT" className="bg-obsidian">International Passport</option>
+                                <option value="DRIVERS_LICENSE" className="bg-obsidian">Driver's Licence</option>
+                              </select>
+                            </div>
+                            <div className="group">
+                              <label className="block mb-2 text-[10px] font-bold uppercase tracking-widest text-white/40 group-focus-within:text-accent transition-colors">
+                                {documentType === "NIN" ? "National Identification Number (NIN)" : 
+                                 documentType === "PASSPORT" ? "Passport Number" : "Driver's Licence Number"}
                               </label>
                               <input
                                 type="text"
-                                value={nin}
-                                onChange={(e) => setNin(e.target.value)}
+                                value={documentNumber}
+                                onChange={(e) => setDocumentNumber(e.target.value)}
                                 required
-                                placeholder="Enter your 11-digit NIN"
+                                placeholder={
+                                  documentType === "NIN" ? "Enter your 11-digit NIN" : 
+                                  documentType === "PASSPORT" ? "Enter your passport number" : "Enter your driver's licence number"
+                                }
                                 className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-white outline-none focus:border-accent transition-all placeholder:text-white/20"
                               />
                             </div>
                             <div className="p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 flex gap-3">
                               <AlertCircle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
                               <p className="text-xs text-subtle leading-relaxed">
-                                Your NIN will be matched against the national database. A live selfie capture will be prompted automatically once Smile ID is fully activated.
+                                Your ID will be securely verified. A live selfie capture will be prompted automatically once Smile ID is fully activated.
                               </p>
                             </div>
                           </motion.div>

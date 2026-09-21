@@ -111,7 +111,14 @@ export default function AdminVerificationsPage() {
                         </td>
                         <td className="p-4">
                           <div className="space-y-1">
-                            {r.nin && <p className="text-sm md:text-base text-white/80">NIN: {r.nin}</p>}
+                            {r.documentType && r.documentNumber ? (
+                              <p className="text-sm md:text-base text-white/80">
+                                {r.documentType === "PASSPORT" ? "Passport" : 
+                                 r.documentType === "DRIVERS_LICENSE" ? "Driver's Licence" : "NIN"}: {r.documentNumber}
+                              </p>
+                            ) : r.nin ? (
+                              <p className="text-sm md:text-base text-white/80">NIN: {r.nin}</p>
+                            ) : null}
                             {r.cacNumber && <p className="text-sm md:text-base text-white/80">CAC: {r.cacNumber}</p>}
                             {r.selfieUrl && (
                               <a href={r.selfieUrl} target="_blank" rel="noreferrer" className="text-accent text-sm md:text-base flex items-center gap-1 hover:underline">
