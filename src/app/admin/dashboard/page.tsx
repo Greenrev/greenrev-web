@@ -55,8 +55,8 @@ const STATUS_CONFIG: Record<
   },
   payment_confirmed: {
     label: "Confirmed",
-    color: "text-emerald-300",
-    bg: "bg-emerald-500/5 border-emerald-500/20 backdrop-blur-md",
+    color: "text-accent-300",
+    bg: "bg-accent-500/5 border-accent-500/20 backdrop-blur-md",
     shadow: "shadow-[0_0_15px_rgba(16,185,129,0.1)]",
   },
   completed: {
@@ -273,7 +273,7 @@ export default function AdminDashboardPage() {
               className="relative bg-obsidian/60 backdrop-blur-2xl border border-white/5 p-6 rounded-3xl overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] group hover:bg-white/[0.04] transition-colors"
             >
               {/* Subtle background glow */}
-              <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald/10 blur-[50px] rounded-full pointer-events-none group-hover:bg-emerald/20 transition-colors" />
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/10 blur-[50px] rounded-full pointer-events-none group-hover:bg-accent/20 transition-colors" />
               
               <p className="text-subtle text-[10px] md:text-xs font-mono font-bold uppercase tracking-widest mb-4">
                 {stat.label}
@@ -506,7 +506,7 @@ export default function AdminDashboardPage() {
                         </p>
                       )}
                       {selectedRequest.adminResolvedAt ? (
-                        <div className="mt-3 flex items-center gap-2 text-emerald-300 text-sm md:text-base">
+                        <div className="mt-3 flex items-center gap-2 text-accent-300 text-sm md:text-base">
                           <CheckCircle2 className="w-4 h-4" />
                           Resolved: {selectedRequest.adminResolution ?? "—"}
                         </div>

@@ -180,7 +180,7 @@ export default function AdminMechanicsPage() {
                         <td className="p-4">
                           <span className={cn(
                             "text-xs md:text-sm font-bold uppercase tracking-widest px-3 py-1 rounded-full border",
-                            u.status === "active" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300" : "bg-red-500/10 border-red-500/20 text-red-300"
+                            u.status === "active" ? "bg-accent-500/10 border-accent-500/20 text-accent-300" : "bg-red-500/10 border-red-500/20 text-red-300"
                           )}>
                             {u.status}
                           </span>

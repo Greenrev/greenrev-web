@@ -131,7 +131,7 @@ export default function AdminProductsPage() {
                         <td className="p-4">
                            <span className={cn(
                             "text-sm md:text-base font-medium",
-                            p.inStock ? "text-emerald-400" : "text-red-400"
+                            p.inStock ? "text-accent-400" : "text-red-400"
                            )}>
                             {p.inStock ? `${p.stockQuantity} in stock` : "Out of stock"}
                            </span>

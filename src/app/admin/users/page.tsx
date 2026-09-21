@@ -141,7 +141,7 @@ export default function AdminUsersPage() {
                         className="grid grid-cols-6 gap-4 items-center px-6 py-4 bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 rounded-2xl transition-all hover:border-white/20 hover:shadow-[0_8px_32px_rgba(16,185,129,0.1)] group"
                       >
                         <div className="col-span-2 flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-white/50 flex-shrink-0 group-hover:bg-emerald/10 group-hover:text-emerald-400 transition-colors">
+                          <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-white/50 flex-shrink-0 group-hover:bg-accent/10 group-hover:text-accent-400 transition-colors">
                             {u.name ? u.name.charAt(0).toUpperCase() : u.email.charAt(0).toUpperCase()}
                           </div>
                           <div>
@@ -154,7 +154,7 @@ export default function AdminUsersPage() {
                             value={u.role}
                             disabled={actionLoading === u._id || currentUser?.id === u._id}
                             onChange={(e) => handleRoleChange(u._id, e.target.value as any)}
-                            className="bg-transparent border-b border-white/10 text-white text-sm md:text-base py-1 pr-6 focus:outline-none focus:border-emerald-400 font-mono transition-colors appearance-none cursor-pointer"
+                            className="bg-transparent border-b border-white/10 text-white text-sm md:text-base py-1 pr-6 focus:outline-none focus:border-accent-400 font-mono transition-colors appearance-none cursor-pointer"
                           >
                             <option value="customer" className="bg-obsidian">Customer</option>
                             <option value="vendor" className="bg-obsidian">Vendor</option>
@@ -170,7 +170,7 @@ export default function AdminUsersPage() {
                               value={u.verificationLevel}
                               disabled={actionLoading === u._id || currentUser?.id === u._id}
                               onChange={(e) => handleTierChange(u._id, e.target.value as any)}
-                              className="bg-transparent border-b border-white/10 text-white text-sm md:text-base py-1 pr-6 focus:outline-none focus:border-emerald-400 font-mono transition-colors appearance-none cursor-pointer"
+                              className="bg-transparent border-b border-white/10 text-white text-sm md:text-base py-1 pr-6 focus:outline-none focus:border-accent-400 font-mono transition-colors appearance-none cursor-pointer"
                             >
                               <option value="basic" className="bg-obsidian">Level 1</option>
                               <option value="individual" className="bg-obsidian">Level 2</option>
@@ -181,7 +181,7 @@ export default function AdminUsersPage() {
                         <div>
                           <span className={cn(
                             "text-[10px] md:text-xs font-mono font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border backdrop-blur-md",
-                            u.status === "active" ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : "bg-red-500/5 border-red-500/20 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.1)]"
+                            u.status === "active" ? "bg-accent-500/5 border-accent-500/20 text-accent-300 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : "bg-red-500/5 border-red-500/20 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.1)]"
                           )}>
                             {u.status}
                           </span>

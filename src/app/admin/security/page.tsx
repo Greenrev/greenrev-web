@@ -72,8 +72,8 @@ export default function AdminSecurityPage() {
         )}
         
         {success && (
-          <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-            <p className="text-emerald-400 font-medium flex items-center gap-2">
+          <div className="p-4 bg-accent-500/10 border border-accent-500/20 rounded-xl">
+            <p className="text-accent-400 font-medium flex items-center gap-2">
               <ShieldCheck className="w-5 h-5" />
               MFA has been successfully enabled on your account!
             </p>
@@ -125,7 +125,7 @@ export default function AdminSecurityPage() {
                       className="p-2.5 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-white"
                       title="Copy Key"
                     >
-                      {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                      {copied ? <Check className="w-4 h-4 text-accent-400" /> : <Copy className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>

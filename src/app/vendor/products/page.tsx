@@ -319,7 +319,7 @@ export default function VendorProductsPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.18 }}
-              className="sticky top-4 z-20 bg-[#0e0e0e]/90 backdrop-blur-xl border border-white/10 rounded-2xl px-5 py-3 flex items-center justify-between gap-4 shadow-xl"
+              className="sticky top-4 z-20 bg-[#0e0e0e]/90 backdrop-blur-xl border border-white/10 rounded-2xl px-5 py-3 flex flex-wrap items-center justify-between gap-4 shadow-xl"
             >
               {/* Select-all */}
               <button

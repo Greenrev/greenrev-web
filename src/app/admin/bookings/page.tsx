@@ -110,7 +110,7 @@ export default function AdminBookingsPage() {
                           <span className={cn(
                             "text-xs md:text-sm font-bold uppercase tracking-widest px-3 py-1 rounded-full border",
                             b.status === "CONFIRMED" ? "bg-blue-500/10 border-blue-500/20 text-blue-400" :
-                            b.status === "COMPLETED" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300" :
+                            b.status === "COMPLETED" ? "bg-accent-500/10 border-accent-500/20 text-accent-300" :
                             b.status === "REJECTED" ? "bg-red-500/10 border-red-500/20 text-red-400" :
                             "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"
                           )}>

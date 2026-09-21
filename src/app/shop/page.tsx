@@ -159,9 +159,9 @@ export default function ShopPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="flex items-center gap-4"
+            className="flex items-center gap-4 w-full md:w-auto mt-4 md:mt-0"
           >
-            <div className="relative group">
+            <div className="relative group flex-1 md:flex-none w-full md:w-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-accent transition-colors" />
               <input
                 type="text"
@@ -173,7 +173,7 @@ export default function ShopPage() {
             </div>
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="lg:hidden p-3 bg-white/5 border border-white/10 rounded-full text-white"
+              className="lg:hidden flex-shrink-0 p-3 bg-white/5 border border-white/10 rounded-full text-white"
             >
               <SlidersHorizontal className="w-5 h-5" />
             </button>

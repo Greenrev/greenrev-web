@@ -149,11 +149,11 @@ export default function DashboardLayout({ children, navItems, role, title }: Das
       <div className="flex-1 flex flex-col min-w-0 min-h-screen relative z-10">
         {/* Mobile Header */}
         <header className="lg:hidden flex items-center justify-between p-4 border-b border-white/5 bg-obsidian/50 backdrop-blur-xl sticky top-0 z-30">
-          <div>
+          <div className="truncate pr-4">
             <span className="text-lg font-display text-white">GreenRev</span>
             <span className="text-accent text-[10px] md:text-xs font-bold uppercase tracking-widest ml-2">{title}</span>
           </div>
-          <button className="text-white/60 hover:text-white" onClick={() => setIsOpen(true)}>
+          <button className="text-white/60 hover:text-white flex-shrink-0" onClick={() => setIsOpen(true)}>
             <Menu className="w-6 h-6" />
           </button>
         </header>

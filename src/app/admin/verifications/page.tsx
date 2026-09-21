@@ -129,7 +129,7 @@ export default function AdminVerificationsPage() {
                           <div className="space-y-1">
                             <span className={cn(
                               "inline-block text-xs md:text-sm font-bold uppercase tracking-widest px-3 py-1 rounded-full border",
-                              r.status === "approved" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300" :
+                              r.status === "approved" ? "bg-accent-500/10 border-accent-500/20 text-accent-300" :
                               r.status === "rejected" ? "bg-red-500/10 border-red-500/20 text-red-400" :
                               r.status === "info_requested" ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-400" :
                               "bg-white/5 border-white/10 text-white/60"

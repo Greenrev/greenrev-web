@@ -118,7 +118,7 @@ export default function AdminSupportPage() {
                                   "text-xs md:text-sm font-bold uppercase tracking-widest px-3 py-1 rounded-full border",
                                   t.status === "OPEN" ? "bg-red-500/10 border-red-500/20 text-red-400" :
                                   t.status === "IN_PROGRESS" ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-400" :
-                                  "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
+                                  "bg-accent-500/10 border-accent-500/20 text-accent-300"
                                 )}>
                                   {t.status}
                                 </span>
