@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Loader2, FileText } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { adminListAuditLogs } from "@/lib/apiAdmin";
 import { useAuth } from "@/context/AuthContext";
 import { ADMIN_NAV } from "@/lib/adminNav";
+import { AdminSearchBar, AdminEmptyState } from "@/components/admin/AdminSearchBar";
 
 export default function AdminAuditLogsPage() {
   const { user: currentUser } = useAuth();
   const [logs, setLogs] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,6 +33,29 @@ export default function AdminAuditLogsPage() {
     fetchLogs();
   }, []);
 
+  const filteredLogs = useMemo(() => {
+    if (!searchQuery.trim()) return logs;
+    const q = searchQuery.toLowerCase().trim();
+    return logs.filter((log) => {
+      const adminName = (log.adminId?.name || log.adminEmail || "").toLowerCase();
+      const approverName = (log.approverId?.name || "").toLowerCase();
+      const action = (log.action || "").toLowerCase();
+      const module = (log.module || "").toLowerCase();
+      const targetModel = (log.targetModel || "").toLowerCase();
+      const targetId = (log.targetId || "").toLowerCase();
+      const reason = (log.reason || "").toLowerCase();
+      return (
+        adminName.includes(q) ||
+        approverName.includes(q) ||
+        action.includes(q) ||
+        module.includes(q) ||
+        targetModel.includes(q) ||
+        targetId.includes(q) ||
+        reason.includes(q)
+      );
+    });
+  }, [logs, searchQuery]);
+
   return (
     <DashboardLayout navItems={ADMIN_NAV} role="admin" title="Admin Portal">
       <div className="space-y-8">
@@ -45,11 +70,32 @@ export default function AdminAuditLogsPage() {
           </div>
         )}
 
+        {/* Search Bar */}
+        <AdminSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          totalCount={logs.length}
+          filteredCount={filteredLogs.length}
+          itemName="logs"
+          placeholder="Search audit logs by admin, action, module, or details..."
+        />
+
         <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden relative">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-accent" />
             </div>
+          ) : filteredLogs.length === 0 ? (
+            <AdminEmptyState
+              searchQuery={searchQuery}
+              onClear={() => setSearchQuery("")}
+              title={searchQuery ? "No matching audit logs found" : "No audit logs found"}
+              description={
+                searchQuery
+                  ? undefined
+                  : "No audit logs have been recorded yet."
+              }
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -63,14 +109,7 @@ export default function AdminAuditLogsPage() {
                   </tr>
                 </thead>
                 <tbody className="text-base md:text-lg">
-                  {logs.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="p-8 text-center text-subtle">
-                        No audit logs found.
-                      </td>
-                    </tr>
-                  ) : (
-                    logs.map((log, i) => (
+                  {filteredLogs.map((log, i) => (
                       <motion.tr
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}

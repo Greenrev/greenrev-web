@@ -27,13 +27,14 @@ export async function adminListRoles() {
   return res.data.roles;
 }
 
-export async function adminListAuditLogs(params?: { page?: number; limit?: number; module?: string; action?: string; adminId?: string }) {
+export async function adminListAuditLogs(params?: { page?: number; limit?: number; module?: string; action?: string; adminId?: string; search?: string }) {
   const query = new URLSearchParams();
   if (params?.page) query.set("page", params.page.toString());
   if (params?.limit) query.set("limit", params.limit.toString());
   if (params?.module) query.set("module", params.module);
   if (params?.action) query.set("action", params.action);
   if (params?.adminId) query.set("adminId", params.adminId);
+  if (params?.search) query.set("search", params.search);
 
   const res = await apiRequest<{ logs: any[]; total: number; page: number; limit: number }>(
     `/api/v1/admin/audit-logs?${query.toString()}`,
@@ -55,11 +56,12 @@ export async function adminAssignRole(userId: string, roleId: string | null) {
   return res.data.user;
 }
 
-export async function adminListUsers(params: { page?: number; limit?: number; role?: string }) {
+export async function adminListUsers(params: { page?: number; limit?: number; role?: string; search?: string }) {
   const query = new URLSearchParams();
   if (params.page) query.set("page", params.page.toString());
   if (params.limit) query.set("limit", params.limit.toString());
   if (params.role) query.set("role", params.role);
+  if (params.search) query.set("search", params.search);
   
   const res = await apiRequest<{ users: AdminUser[]; total: number; page: number; limit: number }>(
     `/api/v1/admin/users?${query.toString()}`,
@@ -115,8 +117,11 @@ export async function adminUpdateUserTier(userId: string, verificationLevel: "ba
 }
 
 // --- Admin Bookings ---
-export async function adminListBookings() {
-  const res = await apiRequest<any[]>("/api/v1/admin/bookings", { method: "GET" });
+export async function adminListBookings(params?: { search?: string }) {
+  const query = new URLSearchParams();
+  if (params?.search) query.set("search", params.search);
+  const qs = query.toString() ? `?${query.toString()}` : "";
+  const res = await apiRequest<any[]>(`/api/v1/admin/bookings${qs}`, { method: "GET" });
   if (!res.success) throw new Error(res.error.message);
   return res.data;
 }
@@ -131,8 +136,11 @@ export async function adminUpdateBookingStatus(bookingId: string, status: string
 }
 
 // --- Admin Verifications ---
-export async function adminListVerifications() {
-  const res = await apiRequest<any[]>("/api/v1/admin/verifications", { method: "GET" });
+export async function adminListVerifications(params?: { search?: string }) {
+  const query = new URLSearchParams();
+  if (params?.search) query.set("search", params.search);
+  const qs = query.toString() ? `?${query.toString()}` : "";
+  const res = await apiRequest<any[]>(`/api/v1/admin/verifications${qs}`, { method: "GET" });
   if (!res.success) throw new Error(res.error.message);
   return res.data;
 }
@@ -151,8 +159,11 @@ export async function adminUpdateVerificationStatus(
 }
 
 // --- Admin Reviews ---
-export async function adminListReviews() {
-  const res = await apiRequest<any[]>("/api/v1/admin/reviews", { method: "GET" });
+export async function adminListReviews(params?: { search?: string }) {
+  const query = new URLSearchParams();
+  if (params?.search) query.set("search", params.search);
+  const qs = query.toString() ? `?${query.toString()}` : "";
+  const res = await apiRequest<any[]>(`/api/v1/admin/reviews${qs}`, { method: "GET" });
   if (!res.success) throw new Error(res.error.message);
   return res.data;
 }
@@ -164,8 +175,11 @@ export async function adminDeleteReview(reviewId: string) {
 }
 
 // --- Admin Support (Tickets) ---
-export async function adminListTickets() {
-  const res = await apiRequest<any[]>("/api/v1/admin/support", { method: "GET" });
+export async function adminListTickets(params?: { search?: string }) {
+  const query = new URLSearchParams();
+  if (params?.search) query.set("search", params.search);
+  const qs = query.toString() ? `?${query.toString()}` : "";
+  const res = await apiRequest<any[]>(`/api/v1/admin/support${qs}`, { method: "GET" });
   if (!res.success) throw new Error(res.error.message);
   return res.data;
 }
@@ -189,8 +203,13 @@ export async function adminReplyToTicket(ticketId: string, content: string, isIn
 }
 
 // --- Admin Products ---
-export async function adminListProducts() {
-  const res = await apiRequest<any>("/api/v1/products", { method: "GET" });
+export async function adminListProducts(params?: { name?: string; category?: string; make?: string }) {
+  const query = new URLSearchParams();
+  if (params?.name) query.set("name", params.name);
+  if (params?.category) query.set("category", params.category);
+  if (params?.make) query.set("make", params.make);
+  const qs = query.toString() ? `?${query.toString()}` : "";
+  const res = await apiRequest<any>(`/api/v1/products${qs}`, { method: "GET" });
   if (!res.success) throw new Error(res.error.message);
   return res.data.products;
 }

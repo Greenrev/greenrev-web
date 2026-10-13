@@ -26,8 +26,11 @@ export async function createInquiry(input: {
   return res.data.inquiry;
 }
 
-export async function adminListInquiries() {
-  const res = await apiRequest<{ inquiries: Inquiry[] }>("/api/v1/admin/inquiries", {
+export async function adminListInquiries(params?: { search?: string }) {
+  const query = new URLSearchParams();
+  if (params?.search) query.set("search", params.search);
+  const qs = query.toString() ? `?${query.toString()}` : "";
+  const res = await apiRequest<{ inquiries: Inquiry[] }>(`/api/v1/admin/inquiries${qs}`, {
     method: "GET",
   });
   if (!res.success) {

@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Calendar } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { adminListBookings, adminUpdateBookingStatus } from "@/lib/apiAdmin";
 import { cn } from "@/lib/utils";
 import { ADMIN_NAV } from "@/lib/adminNav";
+import { AdminSearchBar, AdminEmptyState } from "@/components/admin/AdminSearchBar";
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +33,32 @@ export default function AdminBookingsPage() {
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  const filteredBookings = useMemo(() => {
+    return bookings.filter((b) => {
+      if (statusFilter !== "all" && b.status !== statusFilter) return false;
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
+      const id = (b._id || "").toLowerCase();
+      const custName = (b.userId?.name || "").toLowerCase();
+      const custEmail = (b.userId?.email || "").toLowerCase();
+      const mechName = (b.mechanicId?.name || "").toLowerCase();
+      const mechEmail = (b.mechanicId?.email || "").toLowerCase();
+      const status = (b.status || "").toLowerCase();
+      const issue = (b.issueDescription || "").toLowerCase();
+      const vehicle = `${b.vehicleDetails?.make || ""} ${b.vehicleDetails?.model || ""}`.toLowerCase();
+      return (
+        id.includes(q) ||
+        custName.includes(q) ||
+        custEmail.includes(q) ||
+        mechName.includes(q) ||
+        mechEmail.includes(q) ||
+        status.includes(q) ||
+        issue.includes(q) ||
+        vehicle.includes(q)
+      );
+    });
+  }, [bookings, searchQuery, statusFilter]);
 
   const handleStatusChange = async (bookingId: string, newStatus: string) => {
     if (!confirm(`Are you sure you want to change this booking's status to ${newStatus}?`)) return;
@@ -58,11 +87,47 @@ export default function AdminBookingsPage() {
           </div>
         )}
 
+        {/* Search Bar with Status Filter */}
+        <AdminSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          totalCount={bookings.length}
+          filteredCount={filteredBookings.length}
+          itemName="bookings"
+          placeholder="Search bookings by ID, customer, mechanic, vehicle, or issue..."
+        >
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="bg-white/5 border border-white/10 text-white text-xs md:text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
+          >
+            <option value="all" className="bg-obsidian">All Statuses</option>
+            <option value="PENDING" className="bg-obsidian">Pending</option>
+            <option value="CONFIRMED" className="bg-obsidian">Confirmed</option>
+            <option value="COMPLETED" className="bg-obsidian">Completed</option>
+            <option value="REJECTED" className="bg-obsidian">Rejected</option>
+          </select>
+        </AdminSearchBar>
+
         <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden relative">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-accent" />
             </div>
+          ) : filteredBookings.length === 0 ? (
+            <AdminEmptyState
+              searchQuery={searchQuery}
+              onClear={() => {
+                setSearchQuery("");
+                setStatusFilter("all");
+              }}
+              title={searchQuery || statusFilter !== "all" ? "No matching bookings found" : "No bookings found"}
+              description={
+                searchQuery || statusFilter !== "all"
+                  ? undefined
+                  : "No platform bookings have been placed yet."
+              }
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -77,14 +142,7 @@ export default function AdminBookingsPage() {
                   </tr>
                 </thead>
                 <tbody className="text-base md:text-lg">
-                  {bookings.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="p-8 text-center text-subtle">
-                        No bookings found.
-                      </td>
-                    </tr>
-                  ) : (
-                    bookings.map((b, i) => (
+                  {filteredBookings.map((b, i) => (
                       <motion.tr
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}

@@ -1,22 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ADMIN_NAV } from "@/lib/adminNav";
 import { adminListInquiries, adminUpdateInquiryStatus, Inquiry } from "@/lib/apiInquiry";
-import { Loader2, Mail, CheckCircle, Clock } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { AdminSearchBar, AdminEmptyState } from "@/components/admin/AdminSearchBar";
 
 export default function AdminInquiriesPage() {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "NEW" | "READ" | "REPLIED">("all");
 
   useEffect(() => {
     fetchInquiries();
   }, []);
 
   const fetchInquiries = async () => {
+    setLoading(true);
     try {
       const data = await adminListInquiries();
       setInquiries(data);
@@ -41,10 +45,55 @@ export default function AdminInquiriesPage() {
     }
   };
 
+  const filteredInquiries = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return inquiries.filter((inquiry) => {
+      if (statusFilter !== "all" && inquiry.status !== statusFilter) {
+        return false;
+      }
+      if (!q) return true;
+      const nameMatch = inquiry.name?.toLowerCase().includes(q);
+      const emailMatch = inquiry.email?.toLowerCase().includes(q);
+      const phoneMatch = inquiry.phone?.toLowerCase().includes(q);
+      const messageMatch = inquiry.message?.toLowerCase().includes(q);
+      const statusMatch = inquiry.status?.toLowerCase().includes(q);
+      return nameMatch || emailMatch || phoneMatch || messageMatch || statusMatch;
+    });
+  }, [inquiries, searchQuery, statusFilter]);
+
+  const handleClear = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+  };
+
   return (
     <DashboardLayout navItems={ADMIN_NAV} role="admin" title="Admin Portal">
-      <div className="p-6 md:p-12 max-w-7xl mx-auto">
-        <h1 className="text-3xl font-display text-white mb-8">Inquiries</h1>
+      <div className="p-6 md:p-12 max-w-7xl mx-auto space-y-8">
+        <div>
+          <h1 className="text-3xl font-display text-white mb-2">Inquiries</h1>
+          <p className="text-subtle text-base md:text-lg">Review and respond to general contact requests and customer messages.</p>
+        </div>
+
+        <AdminSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search inquiries by name, email, phone, or message..."
+          totalCount={inquiries.length}
+          filteredCount={filteredInquiries.length}
+          isLoading={loading}
+          onClear={handleClear}
+        >
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="bg-black/60 border border-white/10 text-white text-sm rounded-xl px-3 py-2.5 outline-none focus:border-accent"
+          >
+            <option value="all">All Statuses</option>
+            <option value="NEW">New</option>
+            <option value="READ">Read</option>
+            <option value="REPLIED">Replied</option>
+          </select>
+        </AdminSearchBar>
 
         {loading ? (
           <div className="flex justify-center p-12">
@@ -52,16 +101,23 @@ export default function AdminInquiriesPage() {
           </div>
         ) : error ? (
           <p className="text-red-400 p-4 bg-red-400/10 rounded-xl">{error}</p>
-        ) : inquiries.length === 0 ? (
-          <div className="text-center p-12 border border-white/5 rounded-2xl bg-white/[0.02]">
-            <p className="text-subtle">No inquiries found.</p>
-          </div>
+        ) : filteredInquiries.length === 0 ? (
+          <AdminEmptyState
+            title="No inquiries found"
+            description={
+              searchQuery || statusFilter !== "all"
+                ? "Try adjusting your search terms or filter to find inquiries."
+                : "No customer inquiries have been submitted yet."
+            }
+            searchQuery={searchQuery || (statusFilter !== "all" ? statusFilter : "")}
+            onClearSearch={handleClear}
+          />
         ) : (
           <div className="space-y-4">
-            {inquiries.map((inquiry) => (
+            {filteredInquiries.map((inquiry) => (
               <div
                 key={inquiry._id}
-                className="bg-white/[0.02] border border-white/10 rounded-2xl p-6"
+                className="bg-white/[0.02] border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-colors"
               >
                 <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
                   <div>

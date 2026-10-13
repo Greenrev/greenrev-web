@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Loader2, ExternalLink } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { adminListVerifications, adminUpdateVerificationStatus } from "@/lib/apiAdmin";
 import { cn } from "@/lib/utils";
 import { ADMIN_NAV } from "@/lib/adminNav";
+import { AdminSearchBar, AdminEmptyState } from "@/components/admin/AdminSearchBar";
 
 export default function AdminVerificationsPage() {
   const [requests, setRequests] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +33,36 @@ export default function AdminVerificationsPage() {
   useEffect(() => {
     fetchRequests();
   }, []);
+
+  const filteredRequests = useMemo(() => {
+    return requests.filter((r) => {
+      if (statusFilter !== "all" && r.status !== statusFilter) return false;
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
+      const userName = (r.user?.name || "").toLowerCase();
+      const userEmail = (r.user?.email || "").toLowerCase();
+      const role = (r.user?.role || "").toLowerCase();
+      const level = (r.levelRequested || "").toLowerCase();
+      const status = (r.status || "").toLowerCase();
+      const docType = (r.documentType || "").toLowerCase();
+      const docNum = (r.documentNumber || "").toLowerCase();
+      const nin = (r.nin || "").toLowerCase();
+      const cac = (r.cacNumber || "").toLowerCase();
+      const notes = (r.adminNotes || "").toLowerCase();
+      return (
+        userName.includes(q) ||
+        userEmail.includes(q) ||
+        role.includes(q) ||
+        level.includes(q) ||
+        status.includes(q) ||
+        docType.includes(q) ||
+        docNum.includes(q) ||
+        nin.includes(q) ||
+        cac.includes(q) ||
+        notes.includes(q)
+      );
+    });
+  }, [requests, searchQuery, statusFilter]);
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     let adminNotes = "";
@@ -66,11 +99,47 @@ export default function AdminVerificationsPage() {
           </div>
         )}
 
+        {/* Search Bar with Status Filter */}
+        <AdminSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          totalCount={requests.length}
+          filteredCount={filteredRequests.length}
+          itemName="requests"
+          placeholder="Search by user, email, tier, document number, or notes..."
+        >
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="bg-white/5 border border-white/10 text-white text-xs md:text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
+          >
+            <option value="all" className="bg-obsidian">All Statuses</option>
+            <option value="pending" className="bg-obsidian">Pending</option>
+            <option value="approved" className="bg-obsidian">Approved</option>
+            <option value="info_requested" className="bg-obsidian">Info Requested</option>
+            <option value="rejected" className="bg-obsidian">Rejected</option>
+          </select>
+        </AdminSearchBar>
+
         <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden relative">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-accent" />
             </div>
+          ) : filteredRequests.length === 0 ? (
+            <AdminEmptyState
+              searchQuery={searchQuery}
+              onClear={() => {
+                setSearchQuery("");
+                setStatusFilter("all");
+              }}
+              title={searchQuery || statusFilter !== "all" ? "No matching verification requests" : "No verification requests"}
+              description={
+                searchQuery || statusFilter !== "all"
+                  ? undefined
+                  : "No verification requests are currently awaiting review."
+              }
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -84,14 +153,7 @@ export default function AdminVerificationsPage() {
                   </tr>
                 </thead>
                 <tbody className="text-base md:text-lg">
-                  {requests.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="p-8 text-center text-subtle">
-                        No verification requests found.
-                      </td>
-                    </tr>
-                  ) : (
-                    requests.map((r, i) => (
+                  {filteredRequests.map((r, i) => (
                       <motion.tr
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}

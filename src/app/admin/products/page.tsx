@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Trash2, ExternalLink } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -8,9 +8,12 @@ import { adminListProducts, adminDeleteProduct } from "@/lib/apiAdmin";
 import { ADMIN_NAV } from "@/lib/adminNav";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { AdminSearchBar, AdminEmptyState } from "@/components/admin/AdminSearchBar";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +36,32 @@ export default function AdminProductsPage() {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
+      const name = (p.name || "").toLowerCase();
+      const make = (p.make || "").toLowerCase();
+      const category = (p.category || "").toLowerCase();
+      const vendorName = (p.vendorName || "").toLowerCase();
+      const price = String(p.price || "").toLowerCase();
+      const stock = p.inStock ? "in stock" : "out of stock";
+      return (
+        name.includes(q) ||
+        make.includes(q) ||
+        category.includes(q) ||
+        vendorName.includes(q) ||
+        price.includes(q) ||
+        stock.includes(q)
+      );
+    });
+  }, [products, searchQuery, categoryFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, categoryFilter]);
 
   const handleDelete = async (productId: string) => {
     if (!confirm("Are you sure you want to permanently delete this product? This action cannot be undone.")) return;
@@ -61,11 +90,45 @@ export default function AdminProductsPage() {
           </div>
         )}
 
+        {/* Search Bar with Category Filter */}
+        <AdminSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          totalCount={products.length}
+          filteredCount={filteredProducts.length}
+          itemName="products"
+          placeholder="Search products by title, brand, vendor, price, stock..."
+        >
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="bg-white/5 border border-white/10 text-white text-xs md:text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
+          >
+            <option value="all" className="bg-obsidian">All Categories</option>
+            <option value="vehicle" className="bg-obsidian">Vehicles</option>
+            <option value="part" className="bg-obsidian">Parts</option>
+          </select>
+        </AdminSearchBar>
+
         <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden relative">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-accent" />
             </div>
+          ) : filteredProducts.length === 0 ? (
+            <AdminEmptyState
+              searchQuery={searchQuery}
+              onClear={() => {
+                setSearchQuery("");
+                setCategoryFilter("all");
+              }}
+              title={searchQuery || categoryFilter !== "all" ? "No matching products found" : "No products found"}
+              description={
+                searchQuery || categoryFilter !== "all"
+                  ? undefined
+                  : "No products are currently available in the marketplace."
+              }
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -80,20 +143,13 @@ export default function AdminProductsPage() {
                   </tr>
                 </thead>
                 <tbody className="text-base md:text-lg">
-                  {products.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="p-8 text-center text-subtle">
-                        No products found.
-                      </td>
-                    </tr>
-                  ) : (
-                    (() => {
-                      const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
-                      const paginatedProducts = products.slice(
-                        (currentPage - 1) * ITEMS_PER_PAGE,
-                        currentPage * ITEMS_PER_PAGE
-                      );
-                      return paginatedProducts.map((p, i) => (
+                  {(() => {
+                    const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+                    const paginatedProducts = filteredProducts.slice(
+                      (currentPage - 1) * ITEMS_PER_PAGE,
+                      currentPage * ITEMS_PER_PAGE
+                    );
+                    return paginatedProducts.map((p, i) => (
                       <motion.tr
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -155,13 +211,12 @@ export default function AdminProductsPage() {
                           </button>
                         </td>
                       </motion.tr>
-                    ));
-                  })()
-                  )}
+                    );
+                  })()}
                 </tbody>
               </table>
 
-              {Math.ceil(products.length / ITEMS_PER_PAGE) > 1 && (
+              {Math.ceil(filteredProducts.length / ITEMS_PER_PAGE) > 1 && (
                 <div className="flex items-center justify-between p-4 border-t border-white/5">
                   <button
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
@@ -171,11 +226,11 @@ export default function AdminProductsPage() {
                     Previous
                   </button>
                   <span className="text-xs md:text-sm text-subtle font-medium">
-                    Page {currentPage} of {Math.ceil(products.length / ITEMS_PER_PAGE)}
+                    Page {currentPage} of {Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)}
                   </span>
                   <button
-                    onClick={() => setCurrentPage(p => Math.min(Math.ceil(products.length / ITEMS_PER_PAGE), p + 1))}
-                    disabled={currentPage === Math.ceil(products.length / ITEMS_PER_PAGE)}
+                    onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredProducts.length / ITEMS_PER_PAGE), p + 1))}
+                    disabled={currentPage === Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)}
                     className="px-4 py-2 text-xs md:text-sm font-bold uppercase tracking-widest text-white/60 hover:text-white disabled:opacity-30 transition-colors"
                   >
                     Next

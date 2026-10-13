@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, Menu, X, LucideIcon } from "lucide-react";
+import { LogOut, Menu, X, LucideIcon, Search } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth, UserRole } from "@/context/AuthContext";
 import ProfileAlertModal from "@/components/mechanic/ProfileAlertModal";
 import { VerificationBadge } from "@/components/VerificationBadge";
+import { AdminCommandPalette } from "@/components/admin/AdminCommandPalette";
 
 interface NavItem {
   name: string;
@@ -27,9 +28,21 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children, navItems, role, title }: DashboardLayoutProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -153,10 +166,44 @@ export default function DashboardLayout({ children, navItems, role, title }: Das
             <span className="text-lg font-display text-white">GreenRev</span>
             <span className="text-accent text-[10px] md:text-xs font-bold uppercase tracking-widest ml-2">{title}</span>
           </div>
-          <button className="text-white/60 hover:text-white flex-shrink-0" onClick={() => setIsOpen(true)}>
-            <Menu className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-2">
+            {role === "admin" && (
+              <button
+                onClick={() => setIsPaletteOpen(true)}
+                className="p-2 rounded-xl bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                title="Search sections (⌘K)"
+              >
+                <Search className="w-5 h-5 text-accent" />
+              </button>
+            )}
+            <button className="text-white/60 hover:text-white flex-shrink-0" onClick={() => setIsOpen(true)}>
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
         </header>
+
+        {/* Desktop Admin Header Bar */}
+        {role === "admin" && (
+          <header className="hidden lg:flex items-center justify-between px-10 py-4 border-b border-white/5 bg-obsidian/30 backdrop-blur-md sticky top-0 z-20">
+            <div className="flex items-center gap-3">
+              <span className="text-white/40 text-xs font-mono uppercase tracking-wider">Admin Portal</span>
+              <span className="text-white/20">/</span>
+              <span className="text-white text-xs font-mono font-medium">
+                {navItems.find((n) => pathname === n.href || pathname.startsWith(n.href + "/"))?.name || "Dashboard"}
+              </span>
+            </div>
+            <button
+              onClick={() => setIsPaletteOpen(true)}
+              className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-white/20 text-white/60 hover:text-white transition-all text-xs font-mono group shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+            >
+              <Search className="w-3.5 h-3.5 text-accent group-hover:scale-110 transition-transform" />
+              <span>Search sections...</span>
+              <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-white/40 bg-white/5 border border-white/10 rounded">
+                ⌘K
+              </kbd>
+            </button>
+          </header>
+        )}
 
         {/* Content Area */}
         <main className="flex-1 p-6 md:p-10 lg:p-12">
@@ -165,6 +212,13 @@ export default function DashboardLayout({ children, navItems, role, title }: Das
           </div>
         </main>
       </div>
+
+      {role === "admin" && (
+        <AdminCommandPalette
+          isOpen={isPaletteOpen}
+          onClose={() => setIsPaletteOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -28,8 +28,7 @@ import type {
 } from "@/types/acquisition";
 import { cn } from "@/lib/utils";
 import { ADMIN_NAV } from "@/lib/adminNav";
-
-
+import { AdminSearchBar, AdminEmptyState } from "@/components/admin/AdminSearchBar";
 
 const STATUS_CONFIG: Record<
   AcquisitionStatus,
@@ -86,6 +85,7 @@ function StatusBadge({ status }: { status: AcquisitionStatus }) {
 export default function AdminDashboardPage() {
   const [requests, setRequests] = useState<AcquisitionRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<AcquisitionStatus | "all">(
     "all",
   );
@@ -103,16 +103,24 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [statusFilter, flagFilter]);
+  }, [statusFilter, flagFilter, searchQuery]);
 
   const filteredRequests = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
     return requests.filter((r) => {
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
       if (flagFilter === "flagged" && !r.adminFlaggedAt) return false;
       if (flagFilter === "unflagged" && r.adminFlaggedAt) return false;
-      return true;
+      if (!q) return true;
+      const productMatch = r.productName?.toLowerCase().includes(q);
+      const customerMatch = r.customerName?.toLowerCase().includes(q);
+      const vendorMatch = r.vendorName?.toLowerCase().includes(q);
+      const idMatch = r._id?.toLowerCase().includes(q);
+      const flagMatch = r.adminFlagReason?.toLowerCase().includes(q);
+      const resolutionMatch = r.adminResolution?.toLowerCase().includes(q);
+      return productMatch || customerMatch || vendorMatch || idMatch || flagMatch || resolutionMatch;
     });
-  }, [requests, statusFilter, flagFilter]);
+  }, [requests, statusFilter, flagFilter, searchQuery]);
 
   const selectedRequest = useMemo(
     () => filteredRequests.find((r) => r._id === selectedId) ?? null,
@@ -287,6 +295,20 @@ export default function AdminDashboardPage() {
           ))}
         </div>
 
+        <AdminSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search transactions by product, customer, vendor, ID, or dispute..."
+          totalCount={requests.length}
+          filteredCount={filteredRequests.length}
+          isLoading={loading}
+          onClear={() => {
+            setSearchQuery("");
+            setStatusFilter("all");
+            setFlagFilter("all");
+          }}
+        />
+
         {requests.length > 0 && (
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2">
@@ -341,9 +363,20 @@ export default function AdminDashboardPage() {
             <Loader2 className="w-7 h-7 animate-spin text-accent" />
           </div>
         ) : filteredRequests.length === 0 ? (
-          <div className="py-16 text-center">
-            <p className="text-subtle text-base md:text-lg">No transactions found.</p>
-          </div>
+          <AdminEmptyState
+            title="No transactions found"
+            description={
+              searchQuery || statusFilter !== "all" || flagFilter !== "all"
+                ? "Try adjusting your search terms or filters to find transactions."
+                : "No transaction records have been created yet."
+            }
+            searchQuery={searchQuery || (statusFilter !== "all" ? statusFilter : "")}
+            onClearSearch={() => {
+              setSearchQuery("");
+              setStatusFilter("all");
+              setFlagFilter("all");
+            }}
+          />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-3">

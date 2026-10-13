@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Shield, UserX, Trash2 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -8,11 +8,13 @@ import { adminListUsers, adminUpdateUserRole, adminUpdateUserStatus, adminListRo
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { ADMIN_NAV } from "@/lib/adminNav";
+import { AdminSearchBar, AdminEmptyState } from "@/components/admin/AdminSearchBar";
 
 export default function AdminRolesPage() {
   const { user: currentUser } = useAuth();
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +39,23 @@ export default function AdminRolesPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const filteredAdmins = useMemo(() => {
+    if (!searchQuery.trim()) return admins;
+    const q = searchQuery.toLowerCase().trim();
+    return admins.filter((u) => {
+      const name = (u.name || "").toLowerCase();
+      const email = (u.email || "").toLowerCase();
+      const roleName = (u.assignedRole?.name || "").toLowerCase();
+      const status = (u.status || "").toLowerCase();
+      return (
+        name.includes(q) ||
+        email.includes(q) ||
+        roleName.includes(q) ||
+        status.includes(q)
+      );
+    });
+  }, [admins, searchQuery]);
 
   const handleDemote = async (userId: string) => {
     if (!confirm(`Are you sure you want to demote this admin to a customer?`)) return;
@@ -90,11 +109,32 @@ export default function AdminRolesPage() {
           </div>
         )}
 
+        {/* Search Bar */}
+        <AdminSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          totalCount={admins.length}
+          filteredCount={filteredAdmins.length}
+          itemName="admins"
+          placeholder="Search staff by name, email, role, or status..."
+        />
+
         <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden relative">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-accent" />
             </div>
+          ) : filteredAdmins.length === 0 ? (
+            <AdminEmptyState
+              searchQuery={searchQuery}
+              onClear={() => setSearchQuery("")}
+              title={searchQuery ? "No matching admins found" : "No admins found"}
+              description={
+                searchQuery
+                  ? undefined
+                  : "No administrative staff members currently exist."
+              }
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -107,14 +147,7 @@ export default function AdminRolesPage() {
                   </tr>
                 </thead>
                 <tbody className="text-base md:text-lg">
-                  {admins.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="p-8 text-center text-subtle">
-                        No admins found.
-                      </td>
-                    </tr>
-                  ) : (
-                    admins.map((u, i) => (
+                  {filteredAdmins.map((u, i) => (
                       <motion.tr
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Trash2, UserX, UserCheck } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -8,10 +8,12 @@ import { adminListUsers, adminUpdateUserStatus, adminUpdateUserRole, adminDelete
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { ADMIN_NAV } from "@/lib/adminNav";
+import { AdminSearchBar, AdminEmptyState } from "@/components/admin/AdminSearchBar";
 
 export default function AdminMechanicsPage() {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +36,27 @@ export default function AdminMechanicsPage() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) return users;
+    const q = searchQuery.toLowerCase().trim();
+    return users.filter((u) => {
+      const name = (u.name || "").toLowerCase();
+      const email = (u.email || "").toLowerCase();
+      const tier = (u.verificationLevel || "").toLowerCase();
+      const status = (u.status || "").toLowerCase();
+      return (
+        name.includes(q) ||
+        email.includes(q) ||
+        tier.includes(q) ||
+        status.includes(q)
+      );
+    });
+  }, [users, searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const handleStatusChange = async (userId: string, currentStatus: "active" | "suspended") => {
     const newStatus = currentStatus === "active" ? "suspended" : "active";
@@ -101,11 +124,32 @@ export default function AdminMechanicsPage() {
           </div>
         )}
 
+        {/* Search Bar */}
+        <AdminSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          totalCount={users.length}
+          filteredCount={filteredUsers.length}
+          itemName="mechanics"
+          placeholder="Search mechanics by name, email, tier, or status..."
+        />
+
         <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden relative">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-accent" />
             </div>
+          ) : filteredUsers.length === 0 ? (
+            <AdminEmptyState
+              searchQuery={searchQuery}
+              onClear={() => setSearchQuery("")}
+              title={searchQuery ? "No matching mechanics found" : "No mechanics found"}
+              description={
+                searchQuery
+                  ? undefined
+                  : "No mechanics are currently registered."
+              }
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -120,20 +164,13 @@ export default function AdminMechanicsPage() {
                   </tr>
                 </thead>
                 <tbody className="text-base md:text-lg">
-                  {users.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="p-8 text-center text-subtle">
-                        No mechanics found.
-                      </td>
-                    </tr>
-                  ) : (
-                    (() => {
-                      const totalPages = Math.ceil(users.length / ITEMS_PER_PAGE);
-                      const paginatedUsers = users.slice(
-                        (currentPage - 1) * ITEMS_PER_PAGE,
-                        currentPage * ITEMS_PER_PAGE
-                      );
-                      return paginatedUsers.map((u, i) => (
+                  {(() => {
+                    const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+                    const paginatedUsers = filteredUsers.slice(
+                      (currentPage - 1) * ITEMS_PER_PAGE,
+                      currentPage * ITEMS_PER_PAGE
+                    );
+                    return paginatedUsers.map((u, i) => (
                       <motion.tr
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -208,12 +245,11 @@ export default function AdminMechanicsPage() {
                         </td>
                       </motion.tr>
                     ));
-                  })()
-                  )}
+                  })()}
                 </tbody>
               </table>
 
-              {Math.ceil(users.length / ITEMS_PER_PAGE) > 1 && (
+              {Math.ceil(filteredUsers.length / ITEMS_PER_PAGE) > 1 && (
                 <div className="flex items-center justify-between p-4 border-t border-white/5">
                   <button
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
@@ -223,11 +259,11 @@ export default function AdminMechanicsPage() {
                     Previous
                   </button>
                   <span className="text-xs md:text-sm text-subtle font-medium">
-                    Page {currentPage} of {Math.ceil(users.length / ITEMS_PER_PAGE)}
+                    Page {currentPage} of {Math.ceil(filteredUsers.length / ITEMS_PER_PAGE)}
                   </span>
                   <button
-                    onClick={() => setCurrentPage(p => Math.min(Math.ceil(users.length / ITEMS_PER_PAGE), p + 1))}
-                    disabled={currentPage === Math.ceil(users.length / ITEMS_PER_PAGE)}
+                    onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredUsers.length / ITEMS_PER_PAGE), p + 1))}
+                    disabled={currentPage === Math.ceil(filteredUsers.length / ITEMS_PER_PAGE)}
                     className="px-4 py-2 text-xs md:text-sm font-bold uppercase tracking-widest text-white/60 hover:text-white disabled:opacity-30 transition-colors"
                   >
                     Next

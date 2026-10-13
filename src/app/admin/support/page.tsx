@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { adminListTickets, adminUpdateTicketStatus, adminReplyToTicket } from "@/lib/apiAdmin";
 import { cn } from "@/lib/utils";
 import { ADMIN_NAV } from "@/lib/adminNav";
+import { AdminSearchBar, AdminEmptyState } from "@/components/admin/AdminSearchBar";
 
 export default function AdminSupportPage() {
   const [tickets, setTickets] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +35,33 @@ export default function AdminSupportPage() {
   useEffect(() => {
     fetchTickets();
   }, []);
+
+  const filteredTickets = useMemo(() => {
+    return tickets.filter((t) => {
+      if (statusFilter !== "all" && t.status !== statusFilter) return false;
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
+      const subject = (t.subject || "").toLowerCase();
+      const userName = (t.userId?.name || "").toLowerCase();
+      const userEmail = (t.userId?.email || "").toLowerCase();
+      const userRole = (t.userId?.role || "").toLowerCase();
+      const status = (t.status || "").toLowerCase();
+      const priority = (t.priority || "").toLowerCase();
+      const messagesText = (t.messages || [])
+        .map((m: any) => m.content || "")
+        .join(" ")
+        .toLowerCase();
+      return (
+        subject.includes(q) ||
+        userName.includes(q) ||
+        userEmail.includes(q) ||
+        userRole.includes(q) ||
+        status.includes(q) ||
+        priority.includes(q) ||
+        messagesText.includes(q)
+      );
+    });
+  }, [tickets, searchQuery, statusFilter]);
 
   const handleStatusChange = async (ticketId: string, newStatus: string) => {
     setActionLoading(ticketId);
@@ -73,6 +103,28 @@ export default function AdminSupportPage() {
           </div>
         )}
 
+        {/* Search Bar with Status Filter */}
+        <AdminSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          totalCount={tickets.length}
+          filteredCount={filteredTickets.length}
+          itemName="tickets"
+          placeholder="Search tickets by subject, user, status, priority, message..."
+        >
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="bg-white/5 border border-white/10 text-white text-xs md:text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
+          >
+            <option value="all" className="bg-obsidian">All Statuses</option>
+            <option value="OPEN" className="bg-obsidian">Open</option>
+            <option value="IN_PROGRESS" className="bg-obsidian">In Progress</option>
+            <option value="RESOLVED" className="bg-obsidian">Resolved</option>
+            <option value="CLOSED" className="bg-obsidian">Closed</option>
+          </select>
+        </AdminSearchBar>
+
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-accent" />
@@ -81,13 +133,25 @@ export default function AdminSupportPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Ticket List */}
             <div className="space-y-3">
-              {tickets.length === 0 ? (
-                <div className="p-8 text-center bg-white/[0.02] border border-white/5 rounded-2xl text-subtle text-base md:text-lg">
-                  No support tickets found.
+              {filteredTickets.length === 0 ? (
+                <div className="p-8 text-center bg-white/[0.02] border border-white/5 rounded-2xl">
+                  <AdminEmptyState
+                    searchQuery={searchQuery}
+                    onClear={() => {
+                      setSearchQuery("");
+                      setStatusFilter("all");
+                    }}
+                    title={searchQuery || statusFilter !== "all" ? "No matching tickets found" : "No tickets found"}
+                    description={
+                      searchQuery || statusFilter !== "all"
+                        ? undefined
+                        : "No support tickets have been submitted."
+                    }
+                  />
                 </div>
               ) : (
                 <AnimatePresence mode="popLayout">
-                  {tickets.map((t) => {
+                  {filteredTickets.map((t) => {
                     const expanded = selectedTicketId === t._id;
                     return (
                       <motion.div

@@ -1,18 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Star, Trash2 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { adminListReviews, adminDeleteReview } from "@/lib/apiAdmin";
 import { ADMIN_NAV } from "@/lib/adminNav";
 import { cn } from "@/lib/utils";
+import { AdminSearchBar, AdminEmptyState } from "@/components/admin/AdminSearchBar";
 
 export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [ratingFilter, setRatingFilter] = useState<string>("all");
 
   const fetchReviews = async () => {
     setLoading(true);
@@ -44,6 +47,27 @@ export default function AdminReviewsPage() {
     }
   };
 
+  const filteredReviews = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return reviews.filter((r) => {
+      if (ratingFilter !== "all" && String(r.rating) !== ratingFilter) {
+        return false;
+      }
+      if (!q) return true;
+      const authorMatch = r.customerName?.toLowerCase().includes(q);
+      const emailMatch = r.customerId?.email?.toLowerCase().includes(q);
+      const productMatch = r.productName?.toLowerCase().includes(q);
+      const vendorMatch = r.vendorId?.name?.toLowerCase().includes(q);
+      const commentMatch = r.comment?.toLowerCase().includes(q);
+      return authorMatch || emailMatch || productMatch || vendorMatch || commentMatch;
+    });
+  }, [reviews, searchQuery, ratingFilter]);
+
+  const handleClear = () => {
+    setSearchQuery("");
+    setRatingFilter("all");
+  };
+
   return (
     <DashboardLayout navItems={ADMIN_NAV} role="admin" title="Admin Portal">
       <div className="space-y-8">
@@ -51,6 +75,29 @@ export default function AdminReviewsPage() {
           <h1 className="text-3xl font-display text-white mb-2">Review Moderation</h1>
           <p className="text-subtle text-base md:text-lg">Monitor platform reviews and remove inappropriate content.</p>
         </header>
+
+        <AdminSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search reviews by customer, product, vendor, or comment..."
+          totalCount={reviews.length}
+          filteredCount={filteredReviews.length}
+          isLoading={loading}
+          onClear={handleClear}
+        >
+          <select
+            value={ratingFilter}
+            onChange={(e) => setRatingFilter(e.target.value)}
+            className="bg-black/60 border border-white/10 text-white text-sm rounded-xl px-3 py-2.5 outline-none focus:border-accent"
+          >
+            <option value="all">All Ratings</option>
+            <option value="5">5 Stars</option>
+            <option value="4">4 Stars</option>
+            <option value="3">3 Stars</option>
+            <option value="2">2 Stars</option>
+            <option value="1">1 Star</option>
+          </select>
+        </AdminSearchBar>
 
         {error && (
           <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
@@ -63,6 +110,17 @@ export default function AdminReviewsPage() {
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-accent" />
             </div>
+          ) : filteredReviews.length === 0 ? (
+            <AdminEmptyState
+              title="No reviews found"
+              description={
+                searchQuery || ratingFilter !== "all"
+                  ? "Try adjusting your search query or rating filter."
+                  : "No reviews have been submitted yet."
+              }
+              searchQuery={searchQuery || (ratingFilter !== "all" ? `${ratingFilter} Stars` : "")}
+              onClearSearch={handleClear}
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -76,61 +134,53 @@ export default function AdminReviewsPage() {
                   </tr>
                 </thead>
                 <tbody className="text-base md:text-lg">
-                  {reviews.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="p-8 text-center text-subtle">
-                        No reviews found.
+                  {filteredReviews.map((r, i) => (
+                    <motion.tr
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.03 }}
+                      key={r._id}
+                      className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+                    >
+                      <td className="p-4">
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={cn(
+                                "w-3 h-3",
+                                star <= r.rating ? "fill-yellow-400 text-yellow-400" : "text-white/20"
+                              )}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-xs md:text-sm text-white/40 mt-1">{new Date(r.createdAt).toLocaleDateString()}</p>
                       </td>
-                    </tr>
-                  ) : (
-                    reviews.map((r, i) => (
-                      <motion.tr
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        key={r._id}
-                        className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
-                      >
-                        <td className="p-4">
-                          <div className="flex items-center gap-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={cn(
-                                  "w-3 h-3",
-                                  star <= r.rating ? "fill-yellow-400 text-yellow-400" : "text-white/20"
-                                )}
-                              />
-                            ))}
-                          </div>
-                          <p className="text-xs md:text-sm text-white/40 mt-1">{new Date(r.createdAt).toLocaleDateString()}</p>
-                        </td>
-                        <td className="p-4 max-w-[300px]">
-                          <p className="text-white text-base md:text-lg truncate" title={r.comment}>
-                            {r.comment || <span className="italic text-white/30">No comment</span>}
-                          </p>
-                        </td>
-                        <td className="p-4">
-                          <p className="text-white font-medium">{r.customerName}</p>
-                          <p className="text-subtle text-xs md:text-sm">{r.customerId?.email}</p>
-                        </td>
-                        <td className="p-4">
-                          <p className="text-white font-medium truncate max-w-[150px]">{r.productName}</p>
-                          <p className="text-subtle text-xs md:text-sm uppercase">Vendor: {r.vendorId?.name || "Unknown"}</p>
-                        </td>
-                        <td className="p-4 text-right">
-                          <button
-                            onClick={() => handleDelete(r._id)}
-                            disabled={actionLoading === r._id}
-                            className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-colors disabled:opacity-50 text-red-400"
-                            title="Delete Review"
-                          >
-                            {actionLoading === r._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                          </button>
-                        </td>
-                      </motion.tr>
-                    ))
-                  )}
+                      <td className="p-4 max-w-[300px]">
+                        <p className="text-white text-base md:text-lg truncate" title={r.comment}>
+                          {r.comment || <span className="italic text-white/30">No comment</span>}
+                        </p>
+                      </td>
+                      <td className="p-4">
+                        <p className="text-white font-medium">{r.customerName}</p>
+                        <p className="text-subtle text-xs md:text-sm">{r.customerId?.email}</p>
+                      </td>
+                      <td className="p-4">
+                        <p className="text-white font-medium truncate max-w-[150px]">{r.productName}</p>
+                        <p className="text-subtle text-xs md:text-sm uppercase">Vendor: {r.vendorId?.name || "Unknown"}</p>
+                      </td>
+                      <td className="p-4 text-right">
+                        <button
+                          onClick={() => handleDelete(r._id)}
+                          disabled={actionLoading === r._id}
+                          className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-colors disabled:opacity-50 text-red-400"
+                          title="Delete Review"
+                        >
+                          {actionLoading === r._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        </button>
+                      </td>
+                    </motion.tr>
+                  ))}
                 </tbody>
               </table>
             </div>
