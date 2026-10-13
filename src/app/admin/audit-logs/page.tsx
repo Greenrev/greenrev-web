@@ -152,8 +152,7 @@ export default function AdminAuditLogsPage() {
                           <p className="text-subtle text-xs mt-1">Target: {log.targetModel} ({log.targetId.slice(-6)})</p>
                         </td>
                       </motion.tr>
-                    ))
-                  )}
+                    ))}
                 </tbody>
               </table>
             </div>

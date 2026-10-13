@@ -11,6 +11,8 @@ interface AdminSearchBarProps {
   totalCount?: number;
   filteredCount?: number;
   itemName?: string;
+  isLoading?: boolean;
+  onClear?: () => void;
   className?: string;
   children?: React.ReactNode;
 }
@@ -22,13 +24,19 @@ export function AdminSearchBar({
   totalCount,
   filteredCount,
   itemName = "records",
+  isLoading = false,
+  onClear,
   className,
   children,
 }: AdminSearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleClear = () => {
-    onChange("");
+    if (onClear) {
+      onClear();
+    } else {
+      onChange("");
+    }
     inputRef.current?.focus();
   };
 
@@ -109,6 +117,7 @@ export function AdminSearchBar({
 interface AdminEmptyStateProps {
   searchQuery?: string;
   onClear?: () => void;
+  onClearSearch?: () => void;
   title?: string;
   description?: string;
 }
@@ -116,9 +125,12 @@ interface AdminEmptyStateProps {
 export function AdminEmptyState({
   searchQuery,
   onClear,
+  onClearSearch,
   title,
   description,
 }: AdminEmptyStateProps) {
+  const handleClear = onClear || onClearSearch;
+
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
       <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 mb-4 shadow-[0_0_20px_rgba(255,255,255,0.03)]">
@@ -142,10 +154,10 @@ export function AdminEmptyState({
           ))}
       </p>
 
-      {searchQuery && onClear && (
+      {searchQuery && handleClear && (
         <button
           type="button"
-          onClick={onClear}
+          onClick={handleClear}
           className="px-4 py-2 rounded-xl text-xs md:text-sm font-mono font-semibold uppercase tracking-wider text-accent bg-accent/10 border border-accent/20 hover:bg-accent/20 transition-all"
         >
           Clear Search

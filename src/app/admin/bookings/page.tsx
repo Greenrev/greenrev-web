@@ -189,8 +189,7 @@ export default function AdminBookingsPage() {
                           </select>
                         </td>
                       </motion.tr>
-                    ))
-                  )}
+                    ))}
                 </tbody>
               </table>
             </div>

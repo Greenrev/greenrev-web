@@ -211,7 +211,7 @@ export default function AdminProductsPage() {
                           </button>
                         </td>
                       </motion.tr>
-                    );
+                    ));
                   })()}
                 </tbody>
               </table>

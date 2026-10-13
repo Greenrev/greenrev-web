@@ -243,7 +243,7 @@ export default function AdminUsersPage() {
                         </button>
                       </div>
                     </motion.div>
-                  );
+                  ));
                 })()}
               </div>
 

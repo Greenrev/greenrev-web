@@ -209,8 +209,7 @@ export default function AdminRolesPage() {
                           </button>
                         </td>
                       </motion.tr>
-                    ))
-                  )}
+                    ))}
                 </tbody>
               </table>
             </div>

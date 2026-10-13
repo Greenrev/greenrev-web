@@ -226,8 +226,7 @@ export default function AdminVerificationsPage() {
                           </select>
                         </td>
                       </motion.tr>
-                    ))
-                  )}
+                    ))}
                 </tbody>
               </table>
             </div>
