@@ -229,11 +229,9 @@ export default function CompareAIChat({ compareItems }: { compareItems: CarEntry
 
   return (
     <motion.div
-      initial={false}
-      animate={{ height: isMinimized ? 80 : undefined }}
       className={cn(
         "w-full flex flex-col bg-black/90 backdrop-blur-3xl border border-white/10 rounded-3xl overflow-hidden relative shadow-[0_0_50px_rgba(0,0,0,0.8)] transition-all duration-300",
-        !isMinimized && "h-[500px] md:h-[600px]"
+        isMinimized ? "h-20" : "h-[500px] md:h-[600px] max-h-[calc(100dvh-3rem)]"
       )}
     >
       {/* Header — click to toggle minimize */}
@@ -278,7 +276,7 @@ export default function CompareAIChat({ compareItems }: { compareItems: CarEntry
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar min-h-0">
+      <div ref={scrollRef} data-lenis-prevent className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-5 custom-scrollbar min-h-0">
         <AnimatePresence mode="popLayout">
           {displayMessages.length === 0 && !isThinking ? (
             <div className="h-full flex flex-col items-center justify-center text-center opacity-50 py-10">

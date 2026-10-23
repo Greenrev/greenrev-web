@@ -235,7 +235,7 @@ export default function AdminSupportPage() {
                         </select>
                       </div>
 
-                      <div className="flex-1 p-5 overflow-y-auto space-y-4">
+                      <div data-lenis-prevent className="flex-1 p-5 overflow-y-auto space-y-4">
                         {t.messages?.map((m: any) => {
                           const isAdmin = m.senderId?.role === "admin";
                           return (

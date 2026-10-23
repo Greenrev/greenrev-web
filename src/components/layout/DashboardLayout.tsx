@@ -89,7 +89,8 @@ export default function DashboardLayout({ children, navItems, role, title }: Das
 
       {/* Sidebar */}
       <motion.aside
-        className={`fixed lg:sticky lg:top-6 lg:ml-6 h-screen lg:h-[calc(100vh-3rem)] w-72 bg-obsidian/90 lg:bg-white/[0.02] backdrop-blur-3xl lg:border border-r lg:border-r-white/5 border-white/5 lg:rounded-3xl z-50 flex flex-col transition-transform duration-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        data-lenis-prevent
+        className={`fixed lg:sticky lg:top-6 lg:ml-6 h-[100dvh] lg:h-[calc(100dvh-3rem)] w-72 bg-obsidian/90 lg:bg-white/[0.02] backdrop-blur-3xl lg:border border-r lg:border-r-white/5 border-white/5 lg:rounded-3xl z-50 flex flex-col overflow-y-auto overscroll-contain custom-scrollbar transition-transform duration-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           }`}
       >
         <div className="p-8 flex items-center justify-between">
@@ -110,7 +111,7 @@ export default function DashboardLayout({ children, navItems, role, title }: Das
           </div>
         </div>
 
-        <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-4 space-y-1">
           {navItems.filter((item) => {
             if (!item.requiredPermission) return true;
             if (role !== "admin") return true; // Only filter for admins

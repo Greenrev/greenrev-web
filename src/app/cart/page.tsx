@@ -392,7 +392,7 @@ export default function CartPage() {
                   {!requestSuccess ? (
                     <form onSubmit={handleSubmitRequests} className="space-y-5">
                       {/* Item summary */}
-                      <div className="space-y-2 p-4 bg-white/[0.02] border border-white/5 rounded-2xl max-h-40 overflow-y-auto">
+                      <div data-lenis-prevent className="space-y-2 p-4 bg-white/[0.02] border border-white/5 rounded-2xl max-h-40 overflow-y-auto">
                         {cartItems.map((item) => (
                           <div
                             key={item.id}

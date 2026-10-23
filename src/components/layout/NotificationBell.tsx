@@ -59,7 +59,7 @@ export default function NotificationBell() {
               )}
             </div>
             
-            <div className="max-h-96 overflow-y-auto">
+            <div data-lenis-prevent className="max-h-96 overflow-y-auto">
               {notifications.length === 0 ? (
                 <div className="p-8 text-center text-white/40 text-sm">
                   No new notifications.

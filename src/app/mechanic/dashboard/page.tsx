@@ -283,7 +283,7 @@ export default function MechanicDashboardPage() {
                 <p className="text-subtle text-base md:text-lg">No service requests yet.</p>
               </div>
             ) : (
-              <div className="space-y-3 overflow-y-auto max-h-[520px] pr-1">
+              <div data-lenis-prevent className="space-y-3 overflow-y-auto max-h-[520px] pr-1">
                 {bookings.map((booking) => (
                   <div
                     key={booking._id}
@@ -401,7 +401,7 @@ export default function MechanicDashboardPage() {
                 <p className="text-subtle text-base md:text-lg">No reviews yet.</p>
               </div>
             ) : (
-              <div className="space-y-3 overflow-y-auto max-h-[520px] pr-1">
+              <div data-lenis-prevent className="space-y-3 overflow-y-auto max-h-[520px] pr-1">
                 {reviews.map((review) => (
                   <div
                     key={review._id}
@@ -451,7 +451,7 @@ export default function MechanicDashboardPage() {
               <p className="text-subtle text-base md:text-lg">No messages yet.</p>
             </div>
           ) : (
-            <div className="space-y-3 overflow-y-auto max-h-[520px] pr-1">
+            <div data-lenis-prevent className="space-y-3 overflow-y-auto max-h-[520px] pr-1">
               {messages.map((msg) => (
                 <div
                   key={msg._id}

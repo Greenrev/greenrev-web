@@ -219,7 +219,7 @@ function MessageModal({
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto">
+        <div data-lenis-prevent className="p-6 overflow-y-auto">
           {submitSuccess ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-[#1f1f1f] rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
@@ -379,7 +379,7 @@ function ReviewModal({
         </div>
 
         {/* Scrollable content */}
-        <div className="overflow-y-auto flex-1 p-6 space-y-6">
+        <div data-lenis-prevent className="overflow-y-auto flex-1 p-6 space-y-6">
           {/* Write a review */}
           {user ? (
             <div>
@@ -577,7 +577,7 @@ export default function ExpertList({
         </div>
 
         {/* Experts list */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        <div data-lenis-prevent className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           <AnimatePresence>
             {filteredExperts.map((expert, index) => {
               const { averageRating, reviewCount } = getRating(expert);

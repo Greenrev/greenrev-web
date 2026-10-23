@@ -269,6 +269,7 @@ export function AdminCommandPalette({ isOpen, onClose }: AdminCommandPaletteProp
             {/* Results List */}
             <div
               ref={listRef}
+              data-lenis-prevent
               className="max-h-[420px] overflow-y-auto p-3 space-y-1"
             >
               {filteredItems.length === 0 ? (

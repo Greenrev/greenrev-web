@@ -63,7 +63,7 @@ export function AcquisitionChat({
         <h3 className="font-semibold text-white">Chat</h3>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div data-lenis-prevent className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4 custom-scrollbar min-h-0">
         {loading ? (
           <div className="flex h-full items-center justify-center">
             <Loader2 className="w-6 h-6 text-green-500 animate-spin" />

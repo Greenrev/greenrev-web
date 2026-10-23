@@ -181,7 +181,7 @@ function OrderContent() {
       </div>
 
       {/* Right Side: Form Content */}
-      <div className="lg:w-1/2 flex flex-col p-8 lg:p-24 relative overflow-y-auto">
+      <div data-lenis-prevent className="lg:w-1/2 flex flex-col p-8 lg:p-24 relative overflow-y-auto">
         <div className="max-w-lg w-full mx-auto space-y-12">
           {/* Progress Header */}
           <div className="flex items-center gap-6">

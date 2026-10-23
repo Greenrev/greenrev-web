@@ -536,7 +536,7 @@ export default function ShopPage() {
                 </button>
               </div>
 
-              <div className="space-y-12 overflow-y-auto max-h-[calc(100vh-150px)] pr-4">
+              <div data-lenis-prevent className="space-y-12 overflow-y-auto max-h-[calc(100vh-150px)] pr-4">
                 <div>
                   <h4 className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold mb-6">
                     Manufacturers
