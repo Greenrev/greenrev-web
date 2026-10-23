@@ -30,6 +30,7 @@ import {
 } from "@/lib/apiAcquisition";
 import type { AcquisitionRequest, AcquisitionStatus } from "@/types/acquisition";
 import { cn } from "@/lib/utils";
+import { formatPrice } from "@/lib/formatPrice";
 
 const STATUS_CONFIG: Record<
   AcquisitionStatus,
@@ -135,7 +136,7 @@ function RequestCard({
                 {request.productName}
                 {request.quantity > 1 ? ` (x${request.quantity})` : ""}
               </p>
-              <p className="text-subtle text-sm md:text-base">{request.productPrice} · {request.productMake}</p>
+              <p className="text-subtle text-sm md:text-base">{formatPrice(request.productPrice)} · {request.productMake}</p>
             </div>
             <StatusBadge status={request.status} />
           </div>

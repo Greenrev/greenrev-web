@@ -9,6 +9,7 @@ import { useCompare } from "@/context/CompareContext";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { formatPrice } from "@/lib/formatPrice";
 
 export type CarEntry = {
   id: string;
@@ -159,7 +160,7 @@ export default function InventoryCard({ car }: { car: CarEntry }) {
               </div>
             </div>
             
-            <div className="text-2xl font-display text-accent mb-6 drop-shadow-[0_0_10px_rgba(199,164,61,0.4)]">{car.price}</div>
+            <div className="text-2xl font-display text-accent mb-6 drop-shadow-[0_0_10px_rgba(199,164,61,0.4)]">{formatPrice(car.price)}</div>
             
             <div className="flex items-center gap-6 text-[11px] text-white/70 tracking-widest uppercase font-semibold border-t border-white/10 pt-4">
               <div className="flex flex-col gap-1">

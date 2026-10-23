@@ -17,6 +17,7 @@ import { useCart } from "@/context/CartContext";
 import { getAllProducts } from "@/lib/apiProduct";
 import { transformProductToPartEntry, PartEntry } from "@/lib/transformProduct";
 import Footer from "@/components/layout/Footer";
+import { formatPrice } from "@/lib/formatPrice";
 
 export default function PartsPage() {
   const { addToCart } = useCart();
@@ -228,7 +229,7 @@ export default function PartsPage() {
                               </Link>
                             </div>
                             <p className="text-white font-display text-lg">
-                              ${part.price.toLocaleString()}
+                              {formatPrice(part.price)}
                             </p>
                           </div>
 
@@ -252,7 +253,7 @@ export default function PartsPage() {
                               addToCart({
                                 id: part.id,
                                 name: part.name,
-                                price: `$${part.price.toLocaleString()}`,
+                                price: formatPrice(part.price),
                                 image: part.image,
                                 type: "part",
                                 quantity: 1,

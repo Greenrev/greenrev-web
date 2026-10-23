@@ -33,6 +33,7 @@ import { useAuth } from "@/context/AuthContext";
 import { createAcquisitionRequest } from "@/lib/apiAcquisition";
 import { apiRequest } from "@/lib/apiClient";
 import { CarDetailSkeleton } from "@/components/shared/Skeletons";
+import { formatPrice } from "@/lib/formatPrice";
 
 function CarDetailsContent() {
   const params = useParams();
@@ -285,7 +286,7 @@ function CarDetailsContent() {
               </h1>
               <div className="flex items-center gap-4 mb-10">
                 <span className="text-3xl font-display text-accent">
-                  {car.price}
+                  {formatPrice(car.price)}
                 </span>
                 <span className="px-3 py-1 bg-white/5 border border-white/10 rounded text-[10px] uppercase tracking-widest text-subtle">
                   Exc. Tax
@@ -493,7 +494,7 @@ function CarDetailsContent() {
                 <div className="flex items-center justify-between p-6 border-b border-white/5">
                   <div>
                     <h2 className="text-xl font-display text-white">Place Acquisition Request</h2>
-                    <p className="text-subtle text-xs mt-1">{car?.name} · {car?.price}</p>
+                    <p className="text-subtle text-xs mt-1">{car?.name} · {formatPrice(car?.price)}</p>
                   </div>
                   <button
                     onClick={() => setModalOpen(false)}

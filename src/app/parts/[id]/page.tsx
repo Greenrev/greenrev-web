@@ -27,6 +27,7 @@ import { transformProductToPartEntry, PartEntry } from "@/lib/transformProduct";
 import { createAcquisitionRequest } from "@/lib/apiAcquisition";
 import { apiRequest } from "@/lib/apiClient";
 import { cn } from "@/lib/utils";
+import { formatPrice } from "@/lib/formatPrice";
 
 function PartDetailsContent() {
   const router = useRouter();
@@ -107,7 +108,7 @@ function PartDetailsContent() {
     addToCart({
       id: part.id,
       name: part.name,
-      price: `$${part.price.toLocaleString()}`,
+      price: formatPrice(part.price),
       image: part.image,
       type: "part",
       quantity: 1,
@@ -281,7 +282,7 @@ function PartDetailsContent() {
                   {part.name}
                 </h1>
                 <p className="text-3xl font-display text-accent">
-                  ${part.price.toLocaleString()}
+                  {formatPrice(part.price)}
                 </p>
               </div>
 
@@ -408,7 +409,7 @@ function PartDetailsContent() {
                     {rp.name}
                   </h3>
                   <p className="text-white/40 text-sm mt-2">
-                    ${rp.price.toLocaleString()}
+                    {formatPrice(rp.price)}
                   </p>
                 </Link>
               ))}
@@ -444,7 +445,7 @@ function PartDetailsContent() {
                 <div className="flex items-center justify-between p-6 border-b border-white/5">
                   <div>
                     <h2 className="text-xl font-display text-white">Place Acquisition Request</h2>
-                    <p className="text-subtle text-xs mt-1">{part?.name} · ${part?.price.toLocaleString()}</p>
+                    <p className="text-subtle text-xs mt-1">{part?.name} · {formatPrice(part?.price)}</p>
                   </div>
                   <button
                     onClick={() => setModalOpen(false)}

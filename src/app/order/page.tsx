@@ -11,6 +11,7 @@ import { transformProductToCarEntry } from "@/lib/transformProduct";
 import { CarEntry } from "@/components/shared/InventoryCard";
 import { cn } from "@/lib/utils";
 import { createAcquisitionRequest } from "@/lib/apiAcquisition";
+import { formatPrice } from "@/lib/formatPrice";
 
 function OrderContent() {
   const router = useRouter();
@@ -125,7 +126,7 @@ function OrderContent() {
     : cartItems;
 
   const totalDisplay = searchParams.get("id") && activeCar 
-    ? activeCar.price 
+    ? formatPrice(activeCar.price) 
     : cartTotal;
 
   const handleBack = () => {

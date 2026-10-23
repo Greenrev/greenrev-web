@@ -9,6 +9,7 @@ import { ADMIN_NAV } from "@/lib/adminNav";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { AdminSearchBar, AdminEmptyState } from "@/components/admin/AdminSearchBar";
+import { formatPrice } from "@/lib/formatPrice";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -182,7 +183,7 @@ export default function AdminProductsPage() {
                           </span>
                         </td>
                         <td className="p-4 text-white">
-                          {p.price}
+                          {formatPrice(p.price)}
                         </td>
                         <td className="p-4">
                            <span className={cn(

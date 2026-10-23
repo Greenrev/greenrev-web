@@ -9,6 +9,7 @@ import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import CompareAIChat from "@/components/compare/CompareAIChat";
 import Footer from "@/components/layout/Footer";
+import { formatPrice } from "@/lib/formatPrice";
 
 export default function ComparePage() {
   const { compareItems, removeFromCompare } = useCompare();
@@ -166,7 +167,7 @@ function CompareColumn({ car, onRemove, index, compareWith }: { car: CarEntry, o
         <div className="absolute bottom-6 left-6 right-6 z-20">
           <span className="text-accent text-[10px] tracking-[0.3em] font-bold uppercase mb-2 block drop-shadow-md">{car.make}</span>
           <h2 className="text-3xl md:text-4xl font-display text-white drop-shadow-lg">{car.name}</h2>
-          <div className="text-xl font-display text-white/80 mt-1">{car.price}</div>
+          <div className="text-xl font-display text-white/80 mt-1">{formatPrice(car.price)}</div>
         </div>
       </div>
 

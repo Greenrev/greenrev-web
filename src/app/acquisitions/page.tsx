@@ -34,6 +34,7 @@ import type {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { formatPrice } from "@/lib/formatPrice";
 
 const STATUS_CONFIG: Record<
   AcquisitionStatus,
@@ -268,7 +269,7 @@ function RequestCard({
                 {request.quantity > 1 ? ` (x${request.quantity})` : ""}
               </p>
               <p className="text-subtle text-xs">
-                {request.productPrice} · {request.productMake}
+                {formatPrice(request.productPrice)} · {request.productMake}
               </p>
             </div>
             <span

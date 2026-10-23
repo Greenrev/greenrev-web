@@ -17,6 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createAcquisitionRequest } from "@/lib/apiAcquisition";
+import { formatPrice } from "@/lib/formatPrice";
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } =
@@ -177,7 +178,7 @@ export default function CartPage() {
                                 Qty: 1
                               </span>
                               <span className="text-2xl font-display text-accent">
-                                {item.price}
+                                {formatPrice(item.price)}
                               </span>
                             </div>
                           </div>
@@ -256,7 +257,7 @@ export default function CartPage() {
                                 </button>
                               </div>
                               <span className="text-xl font-display text-white">
-                                {item.price}
+                                {formatPrice(item.price)}
                               </span>
                             </div>
                           </div>
@@ -415,7 +416,7 @@ export default function CartPage() {
                               </span>
                             )}
                             <span className="text-accent text-xs font-bold">
-                              {item.price}
+                              {formatPrice(item.price)}
                             </span>
                           </div>
                         ))}

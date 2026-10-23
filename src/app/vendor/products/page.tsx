@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   X,
 } from "lucide-react";
+import { formatPrice } from "@/lib/formatPrice";
 
 const VENDOR_NAV = [
   { name: "Overview", href: "/vendor/dashboard", icon: LayoutDashboard },
@@ -484,7 +485,7 @@ export default function VendorProductsPage() {
                       </div>
                       <div className="flex items-end justify-between gap-4">
                         <p className="text-white font-display text-xl">
-                          {product.price}
+                          {formatPrice(product.price)}
                         </p>
                         <p className="text-subtle text-sm md:text-base">
                           Qty: {product.stockQuantity ?? 0}

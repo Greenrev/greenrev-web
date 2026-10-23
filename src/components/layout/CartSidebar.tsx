@@ -6,6 +6,7 @@ import { X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
 import Link from 'next/link';
+import { formatPrice } from "@/lib/formatPrice";
 
 export default function CartSidebar() {
   const { cartItems, isCartOpen, setIsCartOpen, removeFromCart, cartTotal } = useCart();
@@ -117,7 +118,7 @@ export default function CartSidebar() {
                              QTY: {item.quantity}
                            </div>
                            <div className="text-accent text-sm font-display tracking-wider">
-                             {item.price}
+                             {formatPrice(item.price)}
                            </div>
                         </div>
                       </div>

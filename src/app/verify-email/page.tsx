@@ -90,7 +90,7 @@ function VerifyEmailInner() {
     if (!email) return;
     setErrorMessage(null);
     await apiRequest(
-      "/api/v1/auth/email/resend-verification",
+      "/api/v1/auth/email/resend",
       { method: "POST", body: JSON.stringify({ email }) },
       { retryOn401: false },
     );
