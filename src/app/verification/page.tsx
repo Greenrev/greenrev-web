@@ -15,6 +15,7 @@ import {
   Loader2
 } from "lucide-react";
 import Link from "next/link";
+import { dashboardPath } from "@/lib/dashboardPath";
 
 export default function VerificationPage() {
   const { user } = useAuth();
@@ -206,7 +207,7 @@ export default function VerificationPage() {
                   </div>
                   <h2 className="text-3xl font-display text-white">Already Verified</h2>
                   <p className="text-subtle">Your account has been fully verified. You can now enjoy all premium features.</p>
-                  <Link href="/dashboard" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black font-bold uppercase tracking-widest text-xs rounded-full hover:bg-white/90 transition-all">
+                  <Link href={dashboardPath(user.role) ?? "/shop"} className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black font-bold uppercase tracking-widest text-xs rounded-full hover:bg-white/90 transition-all">
                     Go to Dashboard <ArrowRight className="w-4 h-4" />
                   </Link>
                 </motion.div>

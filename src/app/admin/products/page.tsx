@@ -195,7 +195,7 @@ export default function AdminProductsPage() {
                         </td>
                         <td className="p-4 text-right space-x-2">
                           <Link
-                            href={`/marketplace/${p._id}`}
+                            href={p.category === "part" ? `/parts/${p._id}` : `/shop/${p._id}`}
                             target="_blank"
                             className="inline-block p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white/60 hover:text-white align-middle"
                             title="View Product"

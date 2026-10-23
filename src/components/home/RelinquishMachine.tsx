@@ -35,7 +35,7 @@ export default function RelinquishMachine() {
             </div>
 
             <Link
-              href="/sell"
+              href="/acquisitions"
               className="inline-block px-10 py-4 bg-[#A3E635] text-black text-xs font-black uppercase tracking-widest rounded-md hover:scale-105 active:scale-95 transition-all duration-300"
             >
               GET VALUATION →

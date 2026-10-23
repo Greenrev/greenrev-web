@@ -16,6 +16,7 @@ import { useCompare } from "@/context/CompareContext";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 import NotificationBell from "./NotificationBell";
+import { dashboardPath } from "@/lib/dashboardPath";
 
 const tabs = [
   { name: "Home", href: "/" },
@@ -250,16 +251,7 @@ function UserDropdown({
     ? user.name.charAt(0).toUpperCase()
     : user.email.charAt(0).toUpperCase();
 
-  const dashboardHref =
-    user.role === "admin"
-      ? "/admin/dashboard"
-      : user.role === "vendor"
-        ? "/vendor/dashboard"
-        : user.role === "mechanic"
-          ? "/mechanic/dashboard"
-          : user.role === "customer"
-            ? "/acquisitions"
-            : null;
+  const dashboardHref = dashboardPath(user.role);
 
   const roleLabels: Record<string, { label: string; style: string }> = {
     admin: {
@@ -399,16 +391,7 @@ function MobileMenu({
     router.push("/");
   };
 
-  const dashboardHref =
-    user?.role === "admin"
-      ? "/admin/dashboard"
-      : user?.role === "vendor"
-        ? "/vendor/dashboard"
-        : user?.role === "mechanic"
-          ? "/mechanic/dashboard"
-          : user?.role === "customer"
-            ? "/acquisitions"
-            : null;
+  const dashboardHref = dashboardPath(user?.role);
 
   const roleLabels: Record<string, { label: string; style: string }> = {
     admin: {

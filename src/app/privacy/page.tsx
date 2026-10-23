@@ -101,7 +101,7 @@ export default function PrivacyPolicyPage() {
           <p>With appropriate permission, precise location may be used for nearby vehicles, dealers, mechanics, rentals, logistics or other location-based features. You can manage device permissions in your device settings.</p>
           <p>We may use approximate location derived from IP address for security, localisation or analytics. We aim not to collect precise location where approximate location is sufficient.</p>
 
-          <h2 className="text-2xl font-display font-semibold mt-10 mb-4 border-b border-white/10 pb-2">9. Cookies and Similar Technologies</h2>
+          <h2 id="cookies" className="text-2xl font-display font-semibold mt-10 mb-4 border-b border-white/10 pb-2 scroll-mt-32">9. Cookies and Similar Technologies</h2>
           <p>GreenRev may use strictly necessary technologies for authentication, security, preferences and core functionality. Analytics, advertising or other non-essential technologies will be used in accordance with applicable consent requirements.</p>
           <p>Where applicable, a cookie banner or Cookie Policy will identify the technologies actually deployed, their purposes and available choices.</p>
 

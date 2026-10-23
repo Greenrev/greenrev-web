@@ -6,6 +6,7 @@ import { useAuth, AuthError } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, ShieldAlert, Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { dashboardPath } from "@/lib/dashboardPath";
 
 export default function AdminLoginPage() {
   const { login } = useAuth();
@@ -24,11 +25,7 @@ export default function AdminLoginPage() {
 
     try {
       const user = await login(email, password);
-      if (user.role === "admin") {
-        router.push("/admin/dashboard");
-      } else {
-        router.push("/dashboard");
-      }
+      router.push(dashboardPath(user.role) ?? "/shop");
     } catch (err: any) {
       setError(err instanceof AuthError ? err.message : err.message || "Invalid credentials");
     } finally {

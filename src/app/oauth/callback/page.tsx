@@ -3,6 +3,7 @@
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiRequest } from "@/lib/apiClient";
+import { safeReturnTo } from "@/lib/dashboardPath";
 
 export default function OAuthCallbackPage() {
   return (
@@ -21,7 +22,7 @@ export default function OAuthCallbackPage() {
 function OAuthCallbackInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnTo = searchParams.get("returnTo") ?? "/shop";
+  const returnTo = safeReturnTo(searchParams.get("returnTo"));
 
   useEffect(() => {
     let cancelled = false;
