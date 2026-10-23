@@ -51,16 +51,24 @@ export default function VerificationPage() {
         ? { documentType, documentNumber, selfieUrl: "pending-smile-sdk-capture" }
         : { cacNumber, cacDocumentUrl: "url", directorIdUrl: "url", businessAddress: "addr", bankAccountNumber: "123", bankCode: "001" };
 
-      const res = await apiRequest<{ success: boolean; data?: any; error?: any }>(endpoint, {
+      const res = await apiRequest<{ request?: unknown; pending?: boolean }>(endpoint, {
         method: "POST",
         body: JSON.stringify(body),
       });
 
       if (res.success) {
-        setMessage({ type: 'success', text: "Smile ID Verification Successful! Upgrading your account..." });
+        setMessage({
+          type: 'success',
+          text: res.data?.pending
+            ? "Verification submitted. We'll update your account as soon as Smile ID confirms your identity."
+            : "Smile ID Verification Successful! Upgrading your account...",
+        });
         setTimeout(() => {
           window.location.reload();
         }, 2000);
+      } else if (res.error?.code === "ALREADY_VERIFIED") {
+        // The account was verified in another session — reload to show the verified state.
+        window.location.reload();
       } else {
         throw new Error(res.error?.message || "Submission failed");
       }
@@ -211,6 +219,22 @@ export default function VerificationPage() {
                     Go to Dashboard <ArrowRight className="w-4 h-4" />
                   </Link>
                 </motion.div>
+              ) : user.verificationStatus === "pending" ? (
+                <motion.div
+                  key="pending"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="p-12 rounded-3xl bg-white/5 border border-white/10 text-center space-y-6"
+                >
+                  <div className="w-20 h-20 bg-yellow-400/10 text-yellow-400 rounded-full flex items-center justify-center mx-auto">
+                    <Loader2 className="w-10 h-10 animate-spin" />
+                  </div>
+                  <h2 className="text-3xl font-display text-white">Verification In Progress</h2>
+                  <p className="text-subtle">
+                    Smile ID is checking your details. This usually takes a few minutes — you can safely log out and come back later.
+                  </p>
+                </motion.div>
               ) : (
                 <motion.div
                   key="form"
@@ -220,6 +244,11 @@ export default function VerificationPage() {
                   className="p-8 md:p-10 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl"
                 >
                   <form onSubmit={handleSubmit} className="space-y-8">
+                    {user.verificationStatus === "rejected" && (
+                      <div className="text-[11px] text-red-200 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+                        Your last verification attempt was unsuccessful. Please check your details and try again.
+                      </div>
+                    )}
                     <div className="space-y-2 mb-8">
                       <h3 className="text-2xl font-display text-white">Verification Details</h3>
                       <p className="text-subtle text-sm">Please provide the required documents for {level} verification.</p>
