@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { name: "Compare", href: "/compare" },
   { name: "Acquisitions", href: "/acquisitions" },
   { name: "About", href: "/about" },
+  { name: "FAQ", href: "/faq" },
 ];
 
 const SOCIAL_LINKS = [

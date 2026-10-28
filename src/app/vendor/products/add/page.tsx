@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Package,
@@ -14,10 +14,18 @@ import {
   AlertCircle,
   ShoppingCart,
   X,
+  Mic,
+  ScanLine,
+  PenLine,
+  Sparkles,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { createProduct, getProduct, updateProduct, uploadProductImage, uploadProductImages } from "@/lib/apiProduct";
+import Combobox from "@/components/vendor/listing/Combobox";
+import AiAssist, { type AssistMode } from "@/components/vendor/listing/AiAssist";
+import type { ExtractedListing } from "@/lib/apiAi";
+import { useListingOptions } from "@/lib/listingOptions";
 import type {
   ProductCategory,
   ProductColor,
@@ -68,7 +76,81 @@ export default function VendorAddProductPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [customSpecs, setCustomSpecs] = useState<{key: string, value: string}[]>([]);
-  const SUGGESTED_SPECS = ["Fuel Type", "Drivetrain", "Body Style", "Engine Size", "Trim Level", "Number of Doors"];
+  const {
+    COLORS,
+    CONDITIONS,
+    PART_BRANDS,
+    TRANSMISSIONS,
+    VEHICLE_MAKES,
+    YEARS,
+    colorHexFor,
+    nameOptions,
+    specKeyOptions,
+    specValueOptions,
+  } = useListingOptions();
+  const SUGGESTED_SPECS = specKeyOptions(category);
+  const [method, setMethod] = useState<"manual" | AssistMode>("manual");
+  const [aiNote, setAiNote] = useState<string | null>(null);
+  const formTopRef = useRef<HTMLDivElement>(null);
+
+  /** Merges accepted AI suggestions into the form, then highlights what changed. */
+  const applyAiSuggestions = (fields: ExtractedListing, photos: File[]) => {
+    const updates: Partial<typeof formData> = {};
+    const changed: string[] = [];
+    const scalar = ["name", "make", "price", "year", "mileage", "colorName", "colorHex", "description", "transmission", "origin", "vin", "horsepower", "torque", "topSpeed", "acceleration", "stockQuantity"] as const;
+    for (const key of scalar) {
+      const v = fields[key];
+      if (v === undefined) continue;
+      (updates as Record<string, string>)[key] = String(v);
+      changed.push(key);
+    }
+    if (fields.colorName && !fields.colorHex) {
+      const hex = colorHexFor(fields.colorName);
+      if (hex) updates.colorHex = hex;
+    }
+    setFormData((prev) => ({ ...prev, ...updates }));
+
+    if (fields.extraSpecs?.length) {
+      setCustomSpecs((prev) => {
+        const next = prev.filter((s) => s.key.trim() || s.value.trim());
+        for (const spec of fields.extraSpecs!) {
+          const i = next.findIndex((s) => s.key.trim().toLowerCase() === spec.key.toLowerCase());
+          if (i >= 0) next[i] = { key: next[i].key, value: spec.value };
+          else next.push({ ...spec });
+        }
+        return next;
+      });
+      changed.push(...fields.extraSpecs.map((s) => `spec:${s.key.toLowerCase()}`));
+    }
+
+    if (photos.length) {
+      setSelectedFiles((prev) => [...prev, ...photos].slice(0, 10));
+      setImagePreviews((prev) => [...prev, ...photos.map((f) => URL.createObjectURL(f))].slice(0, 10));
+      changed.push("images");
+    }
+
+    const count = changed.length;
+    setAiNote(
+      `Filled ${count} ${count === 1 ? "detail" : "details"}${photos.length ? ` and added ${photos.length} photo${photos.length === 1 ? "" : "s"}` : ""} — check everything below, then add anything missing.`
+    );
+    setMethod("manual");
+    setError(null);
+
+    // Wait for the new values to render, then glow each filled field.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        formTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        changed.forEach((key, i) => {
+          document.querySelectorAll<HTMLElement>(`[data-field="${key}"]`).forEach((el) => {
+            el.style.animationDelay = `${Math.min(i, 12) * 60}ms`;
+            el.classList.remove("ai-flash");
+            void el.offsetWidth; // restart the animation
+            el.classList.add("ai-flash");
+          });
+        });
+      })
+    );
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -191,7 +273,7 @@ export default function VendorAddProductPage() {
         category,
         price: formData.price,
         priceValue: isNaN(priceValue) ? undefined : priceValue,
-        year: formData.year ? Number(formData.year) : undefined,
+        year: Number(formData.year) || undefined,
         mileage: formData.mileage || undefined,
         image: finalImageUrl,
         images: finalImageUrls.length > 0 ? finalImageUrls : undefined,
@@ -235,6 +317,8 @@ export default function VendorAddProductPage() {
       });
       setSelectedFiles([]);
       setImagePreviews([]);
+      setCustomSpecs([]);
+      setAiNote(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create product");
     } finally {
@@ -338,7 +422,108 @@ export default function VendorAddProductPage() {
                 </div>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
+                <h2 className="text-lg font-medium text-white">
+                  How would you like to add it?
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {([
+                    { id: "manual", icon: PenLine, title: "Fill in manually", body: "Type with smart suggestions" },
+                    { id: "scan", icon: ScanLine, title: "Scan photos", body: category === "vehicle" ? "Car, VIN plate, papers" : "Part, box or label" },
+                    { id: "voice", icon: Mic, title: "Speak it", body: "Describe it in your words" },
+                  ] as const).map((m) => {
+                    const active = method === m.id;
+                    return (
+                      <motion.button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setMethod(m.id)}
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        aria-pressed={active}
+                        className={`relative text-left p-5 rounded-2xl border transition-colors duration-300 ${
+                          active ? "border-accent/60" : "border-white/10 hover:border-white/20"
+                        }`}
+                      >
+                        {active && (
+                          <motion.span
+                            layoutId="listing-method"
+                            transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                            className="absolute inset-0 rounded-2xl bg-accent/10"
+                          />
+                        )}
+                        <span className="relative flex items-center gap-3">
+                          <span
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-colors duration-300 ${
+                              active ? "bg-accent text-black border-accent" : "bg-black/40 border-white/10 text-white/60"
+                            }`}
+                          >
+                            <m.icon className="w-5 h-5" />
+                          </span>
+                          <span>
+                            <span className="flex items-center gap-1.5 text-white font-medium">
+                              {m.title}
+                              {m.id !== "manual" && <Sparkles className="w-3 h-3 text-accent" />}
+                            </span>
+                            <span className="block text-subtle text-xs mt-0.5">{m.body}</span>
+                          </span>
+                        </span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                <AnimatePresence mode="wait">
+                  {method !== "manual" && (
+                    <AiAssist
+                      key={`${method}-${category}`}
+                      mode={method}
+                      category={category}
+                      current={{
+                        fields: {
+                          name: formData.name,
+                          make: formData.make,
+                          price: formData.price,
+                          year: formData.year,
+                          mileage: formData.mileage,
+                          colorName: formData.colorName,
+                          description: formData.description,
+                          transmission: formData.transmission,
+                          origin: formData.origin,
+                          vin: formData.vin,
+                          horsepower: formData.horsepower,
+                          torque: formData.torque,
+                          topSpeed: formData.topSpeed,
+                          acceleration: formData.acceleration,
+                          stockQuantity: formData.stockQuantity === "1" ? "" : formData.stockQuantity,
+                        },
+                        specs: Object.fromEntries(customSpecs.map((s) => [s.key, s.value])),
+                      }}
+                      onApply={applyAiSuggestions}
+                      onClose={() => setMethod("manual")}
+                    />
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                  {aiNote && method === "manual" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      className="flex items-start gap-3 rounded-xl border border-accent/20 bg-accent/[0.06] px-4 py-3 text-sm text-white/80"
+                    >
+                      <Sparkles className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                      <span className="flex-1">{aiNote}</span>
+                      <button type="button" onClick={() => setAiNote(null)} aria-label="Dismiss" className="text-white/40 hover:text-white">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <div ref={formTopRef} className="space-y-6 scroll-mt-28">
                 <h2 className="text-lg font-medium text-white">
                   Basic Information
                 </h2>
@@ -348,19 +533,18 @@ export default function VendorAddProductPage() {
                     <label className="block text-subtle text-sm md:text-base font-bold uppercase tracking-widest mb-2">
                       Product Name *
                     </label>
-                    <input
-                      type="text"
+                    <Combobox
+                      data-field="name"
                       required
                       placeholder={
                         category === "vehicle"
-                          ? "e.g. Mercedes-Benz G63 AMG"
-                          : "e.g. Racing Air Filter"
+                          ? "e.g. 2019 Toyota Camry XSE"
+                          : "e.g. Brake Pads"
                       }
                       value={formData.name}
-                      onChange={(e) =>
-                        handleInputChange("name", e.target.value)
-                      }
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-accent transition-colors"
+                      onChange={(v) => handleInputChange("name", v)}
+                      options={nameOptions(category, formData.make, formData.year)}
+                      emptyHint={category === "vehicle" ? "Choose a make first to see models" : undefined}
                     />
                   </div>
 
@@ -368,19 +552,17 @@ export default function VendorAddProductPage() {
                     <label className="block text-subtle text-sm md:text-base font-bold uppercase tracking-widest mb-2">
                       Make/Brand *
                     </label>
-                    <input
-                      type="text"
+                    <Combobox
+                      data-field="make"
                       required
                       placeholder={
                         category === "vehicle"
-                          ? "e.g. Mercedes-Benz"
-                          : "e.g. BMW"
+                          ? "Start typing, e.g. Toyota"
+                          : "Start typing, e.g. Bosch"
                       }
                       value={formData.make}
-                      onChange={(e) =>
-                        handleInputChange("make", e.target.value)
-                      }
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-accent transition-colors"
+                      onChange={(v) => handleInputChange("make", v)}
+                      options={category === "vehicle" ? VEHICLE_MAKES : PART_BRANDS}
                     />
                   </div>
 
@@ -389,6 +571,7 @@ export default function VendorAddProductPage() {
                       Price *
                     </label>
                     <input
+                        data-field="price"
                       type="text"
                       required
                       placeholder="e.g. ₦50,000,000"
@@ -406,16 +589,14 @@ export default function VendorAddProductPage() {
                         <label className="block text-subtle text-sm md:text-base font-bold uppercase tracking-widest mb-2">
                           Year
                         </label>
-                        <input
-                          type="number"
+                        <Combobox
+                          data-field="year"
                           placeholder="e.g. 2024"
-                          min="1900"
-                          max="2030"
+                          inputMode="numeric"
+                          maxLength={4}
                           value={formData.year}
-                          onChange={(e) =>
-                            handleInputChange("year", e.target.value)
-                          }
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-accent transition-colors"
+                          onChange={(v) => handleInputChange("year", v.replace(/\D/g, ""))}
+                          options={YEARS}
                         />
                       </div>
 
@@ -424,6 +605,7 @@ export default function VendorAddProductPage() {
                           Mileage
                         </label>
                         <input
+                        data-field="mileage"
                           type="text"
                           placeholder="e.g. 15,000 km"
                           value={formData.mileage}
@@ -438,14 +620,16 @@ export default function VendorAddProductPage() {
                         <label className="block text-subtle text-sm md:text-base font-bold uppercase tracking-widest mb-2">
                           Color Name
                         </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Obsidian Black"
+                        <Combobox
+                          data-field="colorName"
+                          placeholder="e.g. Midnight Black"
                           value={formData.colorName}
-                          onChange={(e) =>
-                            handleInputChange("colorName", e.target.value)
-                          }
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-accent transition-colors"
+                          onChange={(v) => {
+                            handleInputChange("colorName", v);
+                            const hex = colorHexFor(v);
+                            if (hex) handleInputChange("colorHex", hex);
+                          }}
+                          options={COLORS}
                         />
                       </div>
 
@@ -455,6 +639,7 @@ export default function VendorAddProductPage() {
                         </label>
                         <div className="flex gap-3">
                           <input
+                        data-field="colorHex"
                             type="color"
                             value={formData.colorHex}
                             onChange={(e) =>
@@ -463,6 +648,7 @@ export default function VendorAddProductPage() {
                             className="w-14 h-12 bg-white/5 border border-white/10 rounded-xl cursor-pointer"
                           />
                           <input
+                        data-field="colorHex"
                             type="text"
                             placeholder="#000000"
                             value={formData.colorHex}
@@ -493,6 +679,7 @@ export default function VendorAddProductPage() {
                       />
                       <label
                         htmlFor="product-image-upload"
+                        data-field="images"
                         className={`flex flex-col items-center justify-center w-full min-h-[8rem] p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
                           imagePreviews.length > 0 || formData.image
                             ? "border-accent bg-accent/5"
@@ -547,6 +734,7 @@ export default function VendorAddProductPage() {
                     Description
                   </label>
                   <textarea
+                        data-field="description"
                     rows={4}
                     placeholder="Provide a detailed description of the product..."
                     value={formData.description}
@@ -570,6 +758,7 @@ export default function VendorAddProductPage() {
                         Horsepower (HP)
                       </label>
                       <input
+                        data-field="horsepower"
                         type="number"
                         placeholder="e.g. 577"
                         value={formData.horsepower}
@@ -585,6 +774,7 @@ export default function VendorAddProductPage() {
                         Torque
                       </label>
                       <input
+                        data-field="torque"
                         type="text"
                         placeholder="e.g. 850 Nm"
                         value={formData.torque}
@@ -597,16 +787,14 @@ export default function VendorAddProductPage() {
 
                     <div>
                       <label className="block text-subtle text-sm md:text-base font-bold uppercase tracking-widest mb-2">
-                        Transmission
+                        Transmission *
                       </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 9-Speed Automatic"
+                      <Combobox
+                        data-field="transmission"
+                        placeholder="e.g. Automatic"
                         value={formData.transmission}
-                        onChange={(e) =>
-                          handleInputChange("transmission", e.target.value)
-                        }
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-accent transition-colors"
+                        onChange={(v) => handleInputChange("transmission", v)}
+                        options={TRANSMISSIONS}
                       />
                     </div>
 
@@ -615,6 +803,7 @@ export default function VendorAddProductPage() {
                         Top Speed
                       </label>
                       <input
+                        data-field="topSpeed"
                         type="text"
                         placeholder="e.g. 220 km/h"
                         value={formData.topSpeed}
@@ -626,23 +815,22 @@ export default function VendorAddProductPage() {
                     </div>
                     <div>
                       <label className="block text-subtle text-sm md:text-base font-bold uppercase tracking-widest mb-2">
-                        Origin
+                        Condition *
                       </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Germany"
+                      <Combobox
+                        data-field="origin"
+                        placeholder="Brand New, Foreign Used…"
                         value={formData.origin}
-                        onChange={(e) =>
-                          handleInputChange("origin", e.target.value)
-                        }
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-accent transition-colors"
+                        onChange={(v) => handleInputChange("origin", v)}
+                        options={CONDITIONS}
                       />
                     </div>
                     <div>
                       <label className="block text-subtle text-sm md:text-base font-bold uppercase tracking-widest mb-2">
-                        VIN
+                        VIN *
                       </label>
                       <input
+                        data-field="vin"
                         type="text"
                         placeholder="17-character VIN"
                         value={formData.vin}
@@ -659,6 +847,7 @@ export default function VendorAddProductPage() {
                         0-100 km/h (seconds)
                       </label>
                       <input
+                        data-field="acceleration"
                         type="number"
                         step="0.1"
                         placeholder="e.g. 4.5"
@@ -670,11 +859,16 @@ export default function VendorAddProductPage() {
                       />
                     </div>
                   </div>
+                </div>
+              )}
 
-                  {/* Custom Specifications UI */}
-                  <div className="mt-8 pt-8 border-t border-white/5">
+              {/* Custom Specifications UI */}
+              <div className="space-y-6">
+                  <div className="pt-8 border-t border-white/5">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base font-medium text-white">Additional Details</h3>
+                      <h3 className="text-base font-medium text-white">
+                        {category === "vehicle" ? "Additional Details" : "Part Details"}
+                      </h3>
                       <button
                         type="button"
                         onClick={() => setCustomSpecs([...customSpecs, { key: "", value: "" }])}
@@ -687,33 +881,35 @@ export default function VendorAddProductPage() {
                     {customSpecs.length > 0 && (
                       <div className="space-y-4 mb-6">
                         {customSpecs.map((spec, index) => (
-                          <div key={index} className="flex gap-3 md:gap-4 items-start">
-                            <div className="flex-1">
-                              <input
-                                type="text"
-                                placeholder="Name (e.g. Fuel Type)"
-                                value={spec.key}
-                                onChange={(e) => {
-                                  const newSpecs = [...customSpecs];
-                                  newSpecs[index].key = e.target.value;
-                                  setCustomSpecs(newSpecs);
-                                }}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 md:px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-accent transition-colors text-xs md:text-sm"
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <input
-                                type="text"
-                                placeholder="Value (e.g. Petrol)"
-                                value={spec.value}
-                                onChange={(e) => {
-                                  const newSpecs = [...customSpecs];
-                                  newSpecs[index].value = e.target.value;
-                                  setCustomSpecs(newSpecs);
-                                }}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 md:px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-accent transition-colors text-xs md:text-sm"
-                              />
-                            </div>
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: -6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex gap-3 md:gap-4 items-start"
+                          >
+                            <Combobox
+                              className="flex-1"
+                              placeholder={category === "vehicle" ? "Name (e.g. Fuel Type)" : "Name (e.g. Compatibility)"}
+                              value={spec.key}
+                              onChange={(v) => {
+                                const newSpecs = [...customSpecs];
+                                newSpecs[index] = { ...newSpecs[index], key: v };
+                                setCustomSpecs(newSpecs);
+                              }}
+                              options={SUGGESTED_SPECS}
+                            />
+                            <Combobox
+                              className="flex-1"
+                              data-field={`spec:${spec.key.trim().toLowerCase()}`}
+                              placeholder={category === "vehicle" ? "Value (e.g. Petrol)" : "Value (e.g. Toyota Camry 2018-2022)"}
+                              value={spec.value}
+                              onChange={(v) => {
+                                const newSpecs = [...customSpecs];
+                                newSpecs[index] = { ...newSpecs[index], value: v };
+                                setCustomSpecs(newSpecs);
+                              }}
+                              options={specValueOptions(category, spec.key)}
+                            />
                             <button
                               type="button"
                               onClick={() => {
@@ -725,7 +921,7 @@ export default function VendorAddProductPage() {
                             >
                               <X className="w-5 h-5" />
                             </button>
-                          </div>
+                          </motion.div>
                         ))}
                       </div>
                     )}
@@ -750,8 +946,7 @@ export default function VendorAddProductPage() {
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+              </div>
 
               <div className="space-y-6">
                 <h2 className="text-lg font-medium text-white">Inventory</h2>
@@ -762,6 +957,7 @@ export default function VendorAddProductPage() {
                       Stock Quantity
                     </label>
                     <input
+                        data-field="stockQuantity"
                       type="number"
                       min="0"
                       value={formData.stockQuantity}
@@ -857,6 +1053,10 @@ export default function VendorAddProductPage() {
                       colorName: "",
                       colorHex: "#000000",
                     });
+                    setSelectedFiles([]);
+                    setImagePreviews([]);
+                    setCustomSpecs([]);
+                    setAiNote(null);
                     setError(null);
                     setSuccess(false);
                   }}

@@ -245,3 +245,73 @@ export async function getMyExpertBookings(): Promise<ExpertBooking[]> {
   return res.data.bookings;
 }
 
+
+// ---------------------------------------------------------------------------
+// Listing options (admin-managed dropdown values for the vendor listing form)
+// ---------------------------------------------------------------------------
+
+export type ListingOptionKind =
+  | "make"
+  | "model"
+  | "transmission"
+  | "condition"
+  | "color"
+  | "vehicleSpecKey"
+  | "vehicleSpecValue"
+  | "partBrand"
+  | "partName"
+  | "partSpecKey"
+  | "partSpecValue";
+
+export type ListingOptionStatus = "pending" | "approved" | "rejected";
+
+export type AdminListingOption = {
+  _id: string;
+  kind: ListingOptionKind;
+  value: string;
+  parent: string | null;
+  hex: string | null;
+  status: ListingOptionStatus;
+  source: "seed" | "vendor" | "admin";
+  suggestedBy: { _id: string; name?: string; companyName?: string; email?: string }[];
+  suggestionCount: number;
+  lastSuggestedAt: string | null;
+  createdAt: string;
+};
+
+export async function adminListListingOptions(status: ListingOptionStatus, kind?: ListingOptionKind) {
+  const qs = new URLSearchParams({ status, ...(kind ? { kind } : {}) });
+  const res = await apiRequest<{ options: AdminListingOption[]; counts: Partial<Record<ListingOptionStatus, number>> }>(
+    `/api/v1/admin/listing-options?${qs}`,
+    { method: "GET" }
+  );
+  if (!res.success) throw new Error(res.error.message);
+  return res.data;
+}
+
+export async function adminPendingListingOptionCount() {
+  const res = await apiRequest<{ pending: number }>("/api/v1/admin/listing-options/pending-count", { method: "GET" });
+  if (!res.success) throw new Error(res.error.message);
+  return res.data.pending;
+}
+
+export async function adminReviewListingOption(
+  id: string,
+  body: { status: "approved" | "rejected"; value?: string; parent?: string; hex?: string }
+) {
+  const res = await apiRequest<{ option: AdminListingOption; mergedFrom?: string }>(`/api/v1/admin/listing-options/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+  if (!res.success) throw new Error(res.error.message);
+  return res.data;
+}
+
+export async function adminCreateListingOption(body: { kind: ListingOptionKind; value: string; parent?: string; hex?: string }) {
+  const res = await apiRequest<{ option: AdminListingOption }>("/api/v1/admin/listing-options", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  if (!res.success) throw new Error(res.error.message);
+  return res.data.option;
+}

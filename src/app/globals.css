@@ -85,3 +85,46 @@ h6 {
     transform: translateX(100%);
   }
 }
+
+/* FAQ deep-link target: brief accent glow */
+@keyframes faq-flash {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(163, 230, 53, 0); }
+  30% { box-shadow: 0 0 0 1px rgba(163, 230, 53, 0.6), 0 0 40px rgba(163, 230, 53, 0.15); }
+}
+
+.faq-flash {
+  animation: faq-flash 2.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-flash {
+    animation: none;
+  }
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Vendor listing: field just filled by the AI assistant */
+@keyframes ai-flash {
+  0% { box-shadow: 0 0 0 0 rgba(163, 230, 53, 0); }
+  25% { box-shadow: 0 0 0 2px rgba(163, 230, 53, 0.7), 0 0 28px rgba(163, 230, 53, 0.25); }
+  100% { box-shadow: 0 0 0 0 rgba(163, 230, 53, 0); }
+}
+
+.ai-flash {
+  animation: ai-flash 1.8s ease-out both;
+  border-radius: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-flash {
+    animation: none;
+    box-shadow: 0 0 0 1px rgba(163, 230, 53, 0.6);
+  }
+}
