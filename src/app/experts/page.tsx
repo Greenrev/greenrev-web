@@ -23,6 +23,9 @@ interface Expert {
   image: string | null;
   averageRating: number | null;
   reviewCount: number;
+  state?: string;
+  approximateLocation?: boolean;
+  serviceRadiusKm?: number;
 }
 
 export default function ExpertsPage() {

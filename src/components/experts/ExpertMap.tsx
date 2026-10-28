@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useCallback, useMemo } from "react";
-import { GoogleMap, useJsApiLoader, OverlayView } from "@react-google-maps/api";
+import { GoogleMap, useJsApiLoader, OverlayView, CircleF } from "@react-google-maps/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Wrench, Phone, Mail, Lock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import BookingModal from "./BookingModal";
+import { GOOGLE_MAPS_LOADER, darkMapStyle } from "@/lib/googleMaps";
 
 interface Expert {
   id: string;
@@ -20,6 +21,8 @@ interface Expert {
   phone: string | null;
   email: string | null;
   image: string | null;
+  state?: string;
+  approximateLocation?: boolean;
 }
 
 interface ExpertMapProps {
@@ -33,92 +36,8 @@ const mapContainerStyle = {
   height: "100%",
 };
 
-const darkMapStyle = [
-  { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-  {
-    featureType: "administrative.locality",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#d59563" }],
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#d59563" }],
-  },
-  {
-    featureType: "poi.park",
-    elementType: "geometry",
-    stylers: [{ color: "#263c3f" }],
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#6b9a76" }],
-  },
-  {
-    featureType: "road",
-    elementType: "geometry",
-    stylers: [{ color: "#38414e" }],
-  },
-  {
-    featureType: "road",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#212a37" }],
-  },
-  {
-    featureType: "road",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#9ca5b3" }],
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [{ color: "#746855" }],
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#1f2835" }],
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#f3d19c" }],
-  },
-  {
-    featureType: "transit",
-    elementType: "geometry",
-    stylers: [{ color: "#2f3948" }],
-  },
-  {
-    featureType: "transit.station",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#d59563" }],
-  },
-  {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [{ color: "#17263c" }],
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#515c6d" }],
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.stroke",
-    stylers: [{ color: "#17263c" }],
-  },
-];
-
 export default function ExpertMap({ experts, selectedExpert, onSelectExpert }: ExpertMapProps) {
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-  });
+  const { isLoaded, loadError } = useJsApiLoader(GOOGLE_MAPS_LOADER);
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
@@ -178,7 +97,18 @@ export default function ExpertMap({ experts, selectedExpert, onSelectExpert }: E
           fullscreenControl: false,
         }}
       >
-        {experts.map((expert) => (
+        {/* Approximate experts get a soft ~1 km area instead of a precise pin position. */}
+        {experts
+          .filter((e) => e.approximateLocation && (e.lat || e.lng))
+          .map((e) => (
+            <CircleF
+              key={`area-${e.id}`}
+              center={{ lat: e.lat, lng: e.lng }}
+              radius={900}
+              options={{ fillColor: "#A3E635", fillOpacity: 0.08, strokeColor: "#A3E635", strokeOpacity: 0.35, strokeWeight: 1, clickable: false }}
+            />
+          ))}
+        {experts.filter((e) => e.lat || e.lng).map((expert) => (
           <OverlayView
             key={expert.id}
             position={{ lat: expert.lat, lng: expert.lng }}
@@ -264,7 +194,9 @@ export default function ExpertMap({ experts, selectedExpert, onSelectExpert }: E
                         <MapPin className="w-5 h-5 text-accent" />
                     </div>
                     <div className="text-sm text-white/60 font-light leading-relaxed pt-1">
-                        {selectedExpert.address}
+                        {selectedExpert.approximateLocation
+                          ? `Works around ${[selectedExpert.city, selectedExpert.state].filter(Boolean).join(", ") || "this area"} · exact address shared on request`
+                          : selectedExpert.address}
                     </div>
                 </div>
               </div>
