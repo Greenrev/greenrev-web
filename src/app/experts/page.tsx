@@ -6,6 +6,7 @@ import ExpertList from "@/components/experts/ExpertList";
 import ExpertMap from "@/components/experts/ExpertMap";
 import { motion } from "framer-motion";
 import { apiRequest } from "@/lib/apiClient";
+import { useAuth } from "@/context/AuthContext";
 
 interface Expert {
   id: string;
@@ -16,8 +17,9 @@ interface Expert {
   lat: number;
   lng: number;
   specialization: string[];
-  phone: string;
-  email: string;
+  /** null when the viewer isn't signed in — the server withholds contact details from guests. */
+  phone: string | null;
+  email: string | null;
   image: string | null;
   averageRating: number | null;
   reviewCount: number;
@@ -27,17 +29,19 @@ export default function ExpertsPage() {
   const [experts, setExperts] = useState<Expert[]>([]);
   const [selectedExpert, setSelectedExpert] = useState<Expert | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading: authLoading } = useAuth();
 
+  // Refetch when the viewer signs in or out: contact details depend on it.
   useEffect(() => {
+    if (authLoading) return;
     async function fetchExperts() {
       try {
         const response = await apiRequest<{ experts: Expert[] }>("/api/v1/experts");
         
         if (response.success && response.data && response.data.experts) {
-          setExperts(response.data.experts);
-          if (response.data.experts.length > 0) {
-            setSelectedExpert(response.data.experts[0]);
-          }
+          const list = response.data.experts;
+          setExperts(list);
+          setSelectedExpert((prev) => list.find((e) => e.id === prev?.id) ?? list[0]);
         }
       } catch (error) {
         console.error("Failed to fetch experts:", error);
@@ -47,7 +51,7 @@ export default function ExpertsPage() {
     }
 
     fetchExperts();
-  }, []);
+  }, [user?.id, authLoading]);
 
   return (
     <div className="flex flex-col h-screen bg-black overflow-hidden">

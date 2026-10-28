@@ -10,6 +10,7 @@ import { useAuth, UserRole } from "@/context/AuthContext";
 import ProfileAlertModal from "@/components/mechanic/ProfileAlertModal";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { AdminCommandPalette } from "@/components/admin/AdminCommandPalette";
+import { adminPendingListingOptionCount } from "@/lib/apiAdmin";
 
 interface NavItem {
   name: string;
@@ -32,6 +33,28 @@ export default function DashboardLayout({ children, navItems, role, title }: Das
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const [pendingOptions, setPendingOptions] = useState(0);
+
+  // Admins: badge the Listing Options item with values vendors are waiting on.
+  useEffect(() => {
+    if (role !== "admin" || user?.role !== "admin") return;
+    let cancelled = false;
+    const load = () =>
+      adminPendingListingOptionCount()
+        .then((n) => !cancelled && setPendingOptions(n))
+        .catch(() => {});
+    load();
+    const timer = window.setInterval(load, 60_000);
+    window.addEventListener("listing-options-changed", load);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      window.removeEventListener("listing-options-changed", load);
+    };
+  }, [role, user?.role]);
+  const items = navItems.map((item) =>
+    item.href === "/admin/listing-options" ? { ...item, badge: pendingOptions } : item
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -112,13 +135,13 @@ export default function DashboardLayout({ children, navItems, role, title }: Das
         </div>
 
         <nav className="flex-1 px-4 space-y-1">
-          {navItems.filter((item) => {
+          {items.filter((item) => {
             if (!item.requiredPermission) return true;
             if (role !== "admin") return true; // Only filter for admins
             const perms = (user as any).permissions || [];
             return perms.includes(item.requiredPermission);
           }).map((item) => {
-            const bestMatch = navItems.reduce((best, nav) => {
+            const bestMatch = items.reduce((best, nav) => {
               if (pathname === nav.href || pathname.startsWith(nav.href + "/")) {
                 if (!best || nav.href.length > best.href.length) {
                   return nav;

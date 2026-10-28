@@ -14,7 +14,9 @@ import {
   Send,
   Loader2,
   Navigation,
+  Lock,
 } from "lucide-react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiRequest } from "@/lib/apiClient";
 import { useAuth } from "@/context/AuthContext";
@@ -28,8 +30,8 @@ interface Expert {
   lat: number;
   lng: number;
   specialization: string[];
-  phone: string;
-  email: string;
+  phone: string | null;
+  email: string | null;
   image: string | null;
   averageRating: number | null;
   reviewCount: number;
@@ -488,6 +490,7 @@ export default function ExpertList({
   selectedExpertId,
   experts,
 }: ExpertListProps) {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState<string>("All");
   const [reviewExpert, setReviewExpert] = useState<Expert | null>(null);
@@ -674,9 +677,19 @@ export default function ExpertList({
                           {expert.address}
                         </p>
                         <div className="flex flex-wrap gap-2">
-                          <a href={`tel:${expert.phone}`} onClick={(e) => e.stopPropagation()} className="flex-1 min-w-[30%] flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white py-2.5 rounded-xl transition-colors text-xs font-medium">
-                            <Phone className="w-3.5 h-3.5" /> Call
-                          </a>
+                          {expert.phone ? (
+                            <a href={`tel:${expert.phone}`} onClick={(e) => e.stopPropagation()} className="flex-1 min-w-[30%] flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white py-2.5 rounded-xl transition-colors text-xs font-medium">
+                              <Phone className="w-3.5 h-3.5" /> Call
+                            </a>
+                          ) : !user ? (
+                            <Link
+                              href="/login?next=/experts"
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex-1 min-w-[30%] flex items-center justify-center gap-2 bg-white/5 border border-dashed border-white/15 hover:border-accent/40 text-white/60 hover:text-accent py-2.5 rounded-xl transition-colors text-xs font-medium"
+                            >
+                              <Lock className="w-3.5 h-3.5" /> Sign in to call
+                            </Link>
+                          ) : null}
                           <a 
                             href={`https://www.google.com/maps/dir/?api=1&destination=${expert.lat},${expert.lng}`}
                             target="_blank"

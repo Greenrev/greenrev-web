@@ -12,6 +12,7 @@ import {
   Radio,
   FileText,
   Star,
+  ListChecks,
 } from "lucide-react";
 
 export const ADMIN_NAV = [
@@ -21,6 +22,7 @@ export const ADMIN_NAV = [
   { name: "Mechanics", href: "/admin/mechanics", icon: Wrench, requiredPermission: "mechanic.view" },
   { name: "Vendors", href: "/admin/vendors", icon: Users, requiredPermission: "vendor.view" },
   { name: "Products", href: "/admin/products", icon: Package, requiredPermission: "listing.view" },
+  { name: "Listing Options", href: "/admin/listing-options", icon: ListChecks, requiredPermission: "listing.approve" },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3, requiredPermission: "config.view" }, // Defaulting analytics to config view or similar
 
   // Batch 1: Operations & Financials

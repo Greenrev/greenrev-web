@@ -3,7 +3,8 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { GoogleMap, useJsApiLoader, OverlayView } from "@react-google-maps/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Wrench, Phone, Mail } from "lucide-react";
+import { MapPin, Wrench, Phone, Mail, Lock } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
 import BookingModal from "./BookingModal";
 
@@ -16,8 +17,8 @@ interface Expert {
   lat: number;
   lng: number;
   specialization: string[];
-  phone: string;
-  email: string;
+  phone: string | null;
+  email: string | null;
   image: string | null;
 }
 
@@ -268,22 +269,37 @@ export default function ExpertMap({ experts, selectedExpert, onSelectExpert }: E
                 </div>
               </div>
 
+              {selectedExpert.phone || selectedExpert.email ? (
               <div className="grid grid-cols-2 gap-4">
-                 <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Phone className="w-3 h-3 text-accent" />
-                        <span className="text-[8px] uppercase tracking-widest text-white/30 font-bold">Contact</span>
-                    </div>
-                    <div className="text-xs text-white/80">{selectedExpert.phone}</div>
-                 </div>
-                 <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Mail className="w-3 h-3 text-accent" />
-                        <span className="text-[8px] uppercase tracking-widest text-white/30 font-bold">Inquiry</span>
-                    </div>
-                    <div className="text-xs text-white/80 truncate">{selectedExpert.email}</div>
-                 </div>
-              </div>
+                   <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
+                      <div className="flex items-center gap-2 mb-2">
+                          <Phone className="w-3 h-3 text-accent" />
+                          <span className="text-[8px] uppercase tracking-widest text-white/30 font-bold">Contact</span>
+                      </div>
+                      <div className="text-xs text-white/80">{selectedExpert.phone}</div>
+                   </div>
+                   <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
+                      <div className="flex items-center gap-2 mb-2">
+                          <Mail className="w-3 h-3 text-accent" />
+                          <span className="text-[8px] uppercase tracking-widest text-white/30 font-bold">Inquiry</span>
+                      </div>
+                      <div className="text-xs text-white/80 truncate">{selectedExpert.email}</div>
+                   </div>
+                </div>
+              ) : (
+                <Link
+                  href="/login?next=/experts"
+                  className="group flex items-center gap-4 p-4 bg-white/[0.02] border border-dashed border-white/10 hover:border-accent/40 rounded-2xl transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
+                    <Lock className="w-4 h-4 text-accent" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-white">Sign in to see contact details</div>
+                    <div className="text-[11px] text-white/40 mt-0.5">Phone and email are shared with GreenRev members only.</div>
+                  </div>
+                </Link>
+              )}
 
               <button 
                 onClick={() => setIsBookingModalOpen(true)}

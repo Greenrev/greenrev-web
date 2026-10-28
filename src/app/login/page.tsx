@@ -32,9 +32,12 @@ export default function LoginPage() {
         );
         return;
       }
-      if (user.role === "vendor") router.push("/vendor/dashboard");
-      else if (user.role === "mechanic") router.push("/mechanic/dashboard");
-      else router.push("/shop");
+      // ?next=/experts etc. — only same-site paths, never "//evil.com".
+      const next = new URLSearchParams(window.location.search).get("next");
+      const safeNext = next && /^\/(?![\/\\])/.test(next) ? next : null;
+      if (user.role === "vendor") router.push(safeNext ?? "/vendor/dashboard");
+      else if (user.role === "mechanic") router.push(safeNext ?? "/mechanic/dashboard");
+      else router.push(safeNext ?? "/shop");
     } catch (err) {
       if (err instanceof AuthError && err.code === "EMAIL_NOT_VERIFIED") {
         setVerificationHint(true);
