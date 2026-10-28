@@ -15,7 +15,10 @@ import {
   Loader2,
   Navigation,
   Lock,
+  Crosshair,
+  CheckCircle2,
 } from "lucide-react";
+import { distanceKm, formatKm } from "@/lib/googleMaps";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiRequest } from "@/lib/apiClient";
@@ -35,6 +38,11 @@ interface Expert {
   image: string | null;
   averageRating: number | null;
   reviewCount: number;
+  state?: string;
+  /** The expert chose to show only a ~1 km area; no street address is sent. */
+  approximateLocation?: boolean;
+  /** How far they travel; 0 = anywhere. */
+  serviceRadiusKm?: number;
 }
 
 interface Review {
@@ -510,6 +518,47 @@ export default function ExpertList({
 
   const cities = ["All", ...Array.from(new Set(experts.map((e) => e.city)))];
 
+  // "Near me": sort by distance and flag experts whose service area covers the customer.
+  const [nearMe, setNearMe] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState<string | null>(null);
+
+  const toggleNearMe = () => {
+    if (nearMe) {
+      setNearMe(null);
+      return;
+    }
+    if (!navigator.geolocation) {
+      setLocError("Your browser can't share location.");
+      return;
+    }
+    setLocating(true);
+    setLocError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setNearMe({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+      },
+      (err) => {
+        setLocating(false);
+        setLocError(err.code === err.PERMISSION_DENIED ? "Location access is blocked in your browser." : "Couldn't find your location.");
+      },
+      { timeout: 15_000, maximumAge: 300_000 }
+    );
+  };
+
+  const located = (e: Expert) => Boolean(e.lat || e.lng);
+  const distanceTo = (e: Expert) => (nearMe && located(e) ? distanceKm(nearMe, e) : null);
+  const covers = (e: Expert) => {
+    const d = distanceTo(e);
+    if (d === null) return false;
+    const r = e.serviceRadiusKm ?? 25;
+    return r === 0 || d <= r;
+  };
+  const shownExperts = nearMe
+    ? [...filteredExperts].sort((a, b) => (distanceTo(a) ?? Infinity) - (distanceTo(b) ?? Infinity))
+    : filteredExperts;
+
   async function refreshRating(expertId: string) {
     try {
       const res = await apiRequest<{ reviews: { rating: number }[] }>(
@@ -550,7 +599,8 @@ export default function ExpertList({
           </div>
 
           <div className="space-y-4">
-            <div className="relative">
+            <div className="flex gap-2">
+            <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
               <input
                 type="text"
@@ -560,6 +610,26 @@ export default function ExpertList({
                 className="w-full bg-white/5 border border-white/10 rounded-full py-3 pl-11 pr-4 text-white text-sm focus:outline-none focus:border-accent focus:bg-white/10 transition-all placeholder:text-white/30"
               />
             </div>
+              <motion.button
+                type="button"
+                onClick={toggleNearMe}
+                whileTap={{ scale: 0.95 }}
+                aria-pressed={Boolean(nearMe)}
+                className={`shrink-0 inline-flex items-center gap-2 px-4 rounded-full text-xs font-bold uppercase tracking-widest border transition-colors ${
+                  nearMe ? "bg-accent text-black border-accent" : "bg-white/5 text-white/70 border-white/10 hover:text-white"
+                }`}
+              >
+                {locating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crosshair className="w-3.5 h-3.5" />}
+                Near me
+              </motion.button>
+            </div>
+            <AnimatePresence>
+              {locError && (
+                <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="text-xs text-red-300">
+                  {locError}
+                </motion.p>
+              )}
+            </AnimatePresence>
 
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
               {cities.map((city) => (
@@ -582,8 +652,9 @@ export default function ExpertList({
         {/* Experts list */}
         <div data-lenis-prevent className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           <AnimatePresence>
-            {filteredExperts.map((expert, index) => {
+            {shownExperts.map((expert, index) => {
               const { averageRating, reviewCount } = getRating(expert);
+              const distance = distanceTo(expert);
               return (
                 <motion.div
                   layout
@@ -624,9 +695,28 @@ export default function ExpertList({
                         <div className="flex items-center gap-1.5 text-subtle text-xs mb-3">
                           <MapPin className="w-3.5 h-3.5 shrink-0" />
                           <span className="truncate">
-                            {expert.city}, {expert.country}
+                            {[expert.city, expert.country].filter(Boolean).join(", ")}
+                            {distance !== null && <span className="text-white/70"> · {formatKm(distance)}</span>}
                           </span>
                         </div>
+                        {(covers(expert) || expert.approximateLocation) && (
+                          <div className="flex flex-wrap gap-1.5 -mt-1.5 mb-3">
+                            {covers(expert) && (
+                              <motion.span
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-full"
+                              >
+                                <CheckCircle2 className="w-3 h-3" /> Covers your area
+                              </motion.span>
+                            )}
+                            {expert.approximateLocation && (
+                              <span className="text-[10px] uppercase tracking-wider text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
+                                Approx. area
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -674,7 +764,9 @@ export default function ExpertList({
                         className="border-t border-white/5 px-5 py-4 bg-black/20"
                       >
                         <p className="text-sm text-subtle mb-4 leading-relaxed">
-                          {expert.address}
+                          {expert.approximateLocation
+                            ? `Works around ${[expert.city, expert.state].filter(Boolean).join(", ") || "this area"}. Message them for exact directions.`
+                            : expert.address}
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {expert.phone ? (
@@ -690,15 +782,18 @@ export default function ExpertList({
                               <Lock className="w-3.5 h-3.5" /> Sign in to call
                             </Link>
                           ) : null}
-                          <a 
-                            href={`https://www.google.com/maps/dir/?api=1&destination=${expert.lat},${expert.lng}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex-1 min-w-[30%] flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white py-2.5 rounded-xl transition-colors text-xs font-medium"
-                          >
-                            <Navigation className="w-3.5 h-3.5" /> Directions
-                          </a>
+                          {/* Directions to a blurred pin would send people to the wrong street. */}
+                          {located(expert) && !expert.approximateLocation && (
+                            <a
+                              href={`https://www.google.com/maps/dir/?api=1&destination=${expert.lat},${expert.lng}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex-1 min-w-[30%] flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white py-2.5 rounded-xl transition-colors text-xs font-medium"
+                            >
+                              <Navigation className="w-3.5 h-3.5" /> Directions
+                            </a>
+                          )}
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();

@@ -18,6 +18,8 @@ import {
   Send,
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import Link from "next/link";
+import { MapPinOff } from "lucide-react";
 import { apiRequest } from "@/lib/apiClient";
 import { useAuth } from "@/context/AuthContext";
 
@@ -54,6 +56,8 @@ interface Profile {
   hourlyRate: number;
   specialization: string[];
   profileImage: string | null;
+  lat?: number;
+  lng?: number;
 }
 
 interface ExpertMessage {
@@ -225,6 +229,32 @@ export default function MechanicDashboardPage() {
             Manage your service requests, schedule, and profile visibility.
           </p>
         </header>
+
+        {/* Experts without a pin don't appear on the public experts map. */}
+        {profile && (!profile.lat || !profile.lng) && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border border-amber-500/25 bg-amber-500/[0.07] p-5"
+          >
+            <div className="w-11 h-11 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
+              <MapPinOff className="w-5 h-5 text-amber-300" />
+            </div>
+            <div className="flex-1">
+              <p className="text-white font-medium">You&apos;re not on the experts map yet</p>
+              <p className="text-subtle text-sm mt-0.5">
+                Drivers search by location. Pin your workshop so nearby customers can find and book you.
+              </p>
+            </div>
+            <Link
+              href="/mechanic/location"
+              className="shrink-0 inline-flex items-center justify-center px-6 py-3 rounded-full bg-accent text-black text-xs font-bold uppercase tracking-widest hover:shadow-[0_0_30px_rgba(163,230,53,0.35)] transition-shadow"
+            >
+              Set my location
+            </Link>
+          </motion.div>
+        )}
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
