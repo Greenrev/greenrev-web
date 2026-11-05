@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Sparkles, Bot, User, Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CarEntry } from "@/components/shared/InventoryCard";
+import { AiError, streamConcierge } from "@/lib/apiAi";
+import { useAiStatus } from "@/hooks/useAiStatus";
 
 interface MarkdownRendererProps {
   content: string;
@@ -67,6 +69,9 @@ export default function CompareAIChat({ compareItems }: { compareItems: CarEntry
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
+  const aiStatus = useAiStatus();
+  const [offline, setOffline] = useState(false);
+  const isOffline = offline || aiStatus?.available === false;
 
   // Local message list — source of truth for the UI.
   // We manage this ourselves so messages are NEVER removed even if the API errors.
@@ -121,57 +126,12 @@ export default function CompareAIChat({ compareItems }: { compareItems: CarEntry
       setStreamingText("");
 
       try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            // Send messages in the format the API route expects (useChat format)
-            messages: chatHistoryRef.current.map((m, i) => ({
-              id: `msg-${i}`,
-              role: m.role,
-              content: m.content,
-              parts: [{ type: "text", text: m.content }],
-            })),
-            compareData: compareItems,
-          }),
+        // The server builds the AI context itself; send only the conversation and car IDs.
+        const fullText = await streamConcierge({
+          messages: chatHistoryRef.current,
+          compareIds: compareItems.map((c) => c.id),
+          onText: setStreamingText,
         });
-
-        if (!res.ok || !res.body) {
-          throw new Error(`Server error: ${res.status}`);
-        }
-
-        // 3. Stream the response and accumulate text
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let fullText = "";
-        let buffer = "";
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() ?? ""; // keep incomplete line in buffer
-
-          for (const line of lines) {
-            if (!line.startsWith("data: ")) continue;
-            const raw = line.slice(6).trim();
-            if (raw === "[DONE]") continue;
-
-            try {
-              const parsed = JSON.parse(raw);
-              if (parsed.type === "text-delta" && parsed.delta) {
-                fullText += parsed.delta;
-                setStreamingText(fullText);
-              } else if (parsed.type === "error") {
-                throw new Error(parsed.errorText || "AI returned an error");
-              }
-            } catch {
-              // ignore malformed JSON lines
-            }
-          }
-        }
 
         // 4. Streaming complete — move streamed text into displayMessages
         const assistantText = fullText.trim();
@@ -198,15 +158,18 @@ export default function CompareAIChat({ compareItems }: { compareItems: CarEntry
             },
           ]);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Chat error:", err);
+        // The server's message says what's wrong (offline, limit reached, try again).
+        const ai = err instanceof AiError ? err : null;
+        if (ai?.offline) setOffline(true);
         const errorId = `error-${Date.now()}`;
         setDisplayMessages((prev) => [
           ...prev,
           {
             id: errorId,
             role: "assistant",
-            content: "I'm having trouble responding right now. Please try again in a moment.",
+            content: ai?.message ?? "I'm having trouble responding right now. Please try again in a moment.",
             isError: true,
           },
         ]);
@@ -378,14 +341,22 @@ export default function CompareAIChat({ compareItems }: { compareItems: CarEntry
 
       {/* Input */}
       <div className="p-4 bg-black/40 border-t border-white/5 flex-shrink-0">
+        {isOffline && (
+          <p className="mb-3 text-xs text-amber-200/90 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2.5">
+            The AI concierge is offline right now. You can still compare the specs above.
+          </p>
+        )}
         <form onSubmit={onSubmit} className="flex items-center gap-3">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            disabled={isOffline}
             placeholder={
-              compareItems.length === 2
+              isOffline
+                ? "Concierge offline"
+                : compareItems.length === 2
                 ? `Ask about the ${compareItems[0].name} vs ${compareItems[1].name}...`
                 : "Ask me about any vehicle..."
             }
@@ -393,7 +364,7 @@ export default function CompareAIChat({ compareItems }: { compareItems: CarEntry
           />
           <button
             type="submit"
-            disabled={isThinking || !input.trim()}
+            disabled={isThinking || !input.trim() || isOffline}
             className="w-12 h-12 bg-accent text-black rounded-full flex items-center justify-center hover:bg-accent/80 disabled:opacity-40 transition-all shrink-0 hover:scale-105 active:scale-95"
           >
             {isThinking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

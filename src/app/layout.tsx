@@ -9,6 +9,7 @@ import { CompareProvider } from "@/context/CompareContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { SocketProvider } from "@/context/SocketContext";
 import { Toaster } from "react-hot-toast";
+import VisitBeacon from "@/components/analytics/VisitBeacon";
 
 export const metadata: Metadata = {
   title: "GreenRev | One Automotive Ecosystem",
@@ -67,6 +68,7 @@ export default function RootLayout({
                   {children}
                 </SmoothScroll>
                 <CartSidebar />
+                <VisitBeacon />
                 <Toaster position="bottom-right" />
               </CartProvider>
             </CompareProvider>

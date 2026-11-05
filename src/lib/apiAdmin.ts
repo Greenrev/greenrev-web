@@ -315,3 +315,33 @@ export async function adminCreateListingOption(body: { kind: ListingOptionKind; 
   if (!res.success) throw new Error(res.error.message);
   return res.data.option;
 }
+
+// ---------------------------------------------------------------------------
+// Analytics
+// ---------------------------------------------------------------------------
+
+export type ActiveCount = { visitors: number; signedIn: number; previous: number };
+
+export type AnalyticsOverview = {
+  activeUsers: {
+    today: string;
+    dau: ActiveCount;
+    wau: ActiveCount;
+    mau: ActiveCount;
+    stickiness: number;
+    byPlatform: { web: number; ios: number; android: number };
+    daily: { day: string; visitors: number; signedIn: number }[];
+  };
+  users: { total: number; byRole: Record<string, number>; new7d: number; new30d: number };
+  listings: { total: number; byCategory: Record<string, number>; new30d: number };
+  acquisitions: { total: number; byStatus: Record<string, number>; paid30d: number; paidValue30d: number };
+  bookings: { total: number; byStatus: Record<string, number> };
+  support: { openTickets: number; newInquiries: number };
+  ai: { requests30d: number; errors30d: number; costUsd30d: number; byFeature: Record<string, { requests: number; errors: number; costUsd: number }> };
+};
+
+export async function adminAnalyticsOverview() {
+  const res = await apiRequest<AnalyticsOverview>("/api/v1/admin/analytics/overview", { method: "GET" });
+  if (!res.success) throw new Error(res.error.message);
+  return res.data;
+}

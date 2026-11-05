@@ -28,7 +28,7 @@ function getCookie(name: string): string | undefined {
   return decodeURIComponent(match.slice(name.length + 1));
 }
 
-async function doFetch<T>(input: RequestInfo, init?: RequestInit): Promise<ApiResponse<T>> {
+function authHeaders(init?: RequestInit): Headers {
   const csrf = storedCsrfToken || getCookie("csrf_token");
   const headers = new Headers(init?.headers ?? {});
   headers.set("Accept", "application/json");
@@ -45,7 +45,11 @@ async function doFetch<T>(input: RequestInfo, init?: RequestInit): Promise<ApiRe
   if (storedAccessToken) {
     headers.set("Authorization", `Bearer ${storedAccessToken}`);
   }
+  return headers;
+}
 
+async function doFetch<T>(input: RequestInfo, init?: RequestInit): Promise<ApiResponse<T>> {
+  const headers = authHeaders(init);
   const res = await fetch(input, {
     ...init,
     headers,
@@ -90,3 +94,8 @@ export function apiBaseUrl(): string {
   return API_BASE;
 }
 
+/** Like apiRequest, but hands back the raw Response so the caller can read a stream. */
+export function apiStream(path: string, init?: Omit<RequestInit, "credentials">): Promise<Response> {
+  const url = `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
+  return fetch(url, { ...init, headers: authHeaders(init), credentials: "include" });
+}
