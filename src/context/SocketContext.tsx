@@ -41,6 +41,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     
     const newSocket = io(API_URL, {
       withCredentials: true,
+      // WebSocket first (like the mobile app): long-polling needs sticky sessions once the
+      // API runs on more than one instance. Polling stays as a fallback for strict networks.
+      transports: ["websocket", "polling"],
     });
 
     newSocket.on("connect", () => {

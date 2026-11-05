@@ -29,6 +29,9 @@ import type {
 import { cn } from "@/lib/utils";
 import { ADMIN_NAV } from "@/lib/adminNav";
 import { AdminSearchBar, AdminEmptyState } from "@/components/admin/AdminSearchBar";
+import { ActiveUsersKpis } from "@/components/admin/ActiveUsers";
+import { adminAnalyticsOverview, type AnalyticsOverview } from "@/lib/apiAdmin";
+import Link from "next/link";
 
 const STATUS_CONFIG: Record<
   AcquisitionStatus,
@@ -100,6 +103,14 @@ export default function AdminDashboardPage() {
   const [resolution, setResolution] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
+
+  // DAU / WAU / MAU across the website and apps.
+  const [activeUsers, setActiveUsers] = useState<AnalyticsOverview["activeUsers"] | null>(null);
+  useEffect(() => {
+    adminAnalyticsOverview()
+      .then((d) => setActiveUsers(d.activeUsers))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -255,6 +266,18 @@ export default function AdminDashboardPage() {
   return (
     <DashboardLayout navItems={ADMIN_NAV} role="admin" title="Admin Portal">
       <div className="space-y-8">
+        {activeUsers && (
+          <section className="space-y-3">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-xs md:text-sm uppercase tracking-widest text-white/40 font-bold">Active users</h2>
+              <Link href="/admin/analytics" className="text-sm text-accent hover:text-white">
+                Full analytics
+              </Link>
+            </div>
+            <ActiveUsersKpis data={activeUsers} />
+          </section>
+        )}
+
         <header>
           <h1 className="text-3xl font-display text-white mb-2">
             Transaction Monitoring

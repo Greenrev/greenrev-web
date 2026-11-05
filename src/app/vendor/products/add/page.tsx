@@ -26,6 +26,7 @@ import Combobox from "@/components/vendor/listing/Combobox";
 import AiAssist, { type AssistMode } from "@/components/vendor/listing/AiAssist";
 import type { ExtractedListing } from "@/lib/apiAi";
 import { useListingOptions } from "@/lib/listingOptions";
+import { AI_OFFLINE_MESSAGE, useAiStatus } from "@/hooks/useAiStatus";
 import type {
   ProductCategory,
   ProductColor,
@@ -90,6 +91,8 @@ export default function VendorAddProductPage() {
   } = useListingOptions();
   const SUGGESTED_SPECS = specKeyOptions(category);
   const [method, setMethod] = useState<"manual" | AssistMode>("manual");
+  const aiStatus = useAiStatus();
+  const aiOffline = aiStatus?.available === false;
   const [aiNote, setAiNote] = useState<string | null>(null);
   const formTopRef = useRef<HTMLDivElement>(null);
 
@@ -433,15 +436,18 @@ export default function VendorAddProductPage() {
                     { id: "voice", icon: Mic, title: "Speak it", body: "Describe it in your words" },
                   ] as const).map((m) => {
                     const active = method === m.id;
+                    const unavailable = m.id !== "manual" && aiOffline;
                     return (
                       <motion.button
                         key={m.id}
                         type="button"
+                        disabled={unavailable}
+                        title={unavailable ? AI_OFFLINE_MESSAGE : undefined}
                         onClick={() => setMethod(m.id)}
                         whileHover={{ y: -2 }}
                         whileTap={{ scale: 0.98 }}
                         aria-pressed={active}
-                        className={`relative text-left p-5 rounded-2xl border transition-colors duration-300 ${
+                        className={`relative text-left p-5 rounded-2xl border transition-colors duration-300 disabled:opacity-40 disabled:cursor-not-allowed ${
                           active ? "border-accent/60" : "border-white/10 hover:border-white/20"
                         }`}
                       >
@@ -465,13 +471,19 @@ export default function VendorAddProductPage() {
                               {m.title}
                               {m.id !== "manual" && <Sparkles className="w-3 h-3 text-accent" />}
                             </span>
-                            <span className="block text-subtle text-xs mt-0.5">{m.body}</span>
+                            <span className="block text-subtle text-xs mt-0.5">{unavailable ? "Offline right now" : m.body}</span>
                           </span>
                         </span>
                       </motion.button>
                     );
                   })}
                 </div>
+
+                {aiOffline && (
+                  <p className="text-xs text-amber-200/90 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2.5">
+                    {AI_OFFLINE_MESSAGE} Fill in the details below — smart suggestions still work.
+                  </p>
+                )}
 
                 <AnimatePresence mode="wait">
                   {method !== "manual" && (
